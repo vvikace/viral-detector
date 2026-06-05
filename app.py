@@ -154,7 +154,8 @@ if analyze_button and target_profile:
                         "srednia": int(avg_engagement),
                         "ostatni_post": int(latest_post["engagement"]),
                         "v_score": float(v_score)
-                    }).execute()
+                        }).execute()
+    
                 except Exception as db_e:
                     st.warning(f"Nie udało się zapisać do bazy (sprawdź klucze API): {db_e}")
                 # ------------------------------
