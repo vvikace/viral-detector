@@ -292,7 +292,7 @@ Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro
                         mime="application/pdf"
                     )
     
-            except Exception as e:
+    except Exception as e:
                 st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
 
     else: 
