@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
 import pandas as pd
-import instaloader
 import plotly.express as px
 import yt_dlp
 from datetime import datetime
@@ -24,18 +23,35 @@ if analyze_button and target_profile:
             posts_data = []
             
             if platform == "Instagram":
-                L = instaloader.Instaloader() 
-                profile = instaloader.Profile.from_username(L.context, target_profile)
+                # Adres URL z dokumentacji RapidAPI (Endpoint do pobierania postów użytkownika)
+                url = f"https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_followers_v2.php"
                 
-                count = 0
-                for post in profile.get_posts():
-                    if count >= 10: break
+                # Zależnie od API parametr może nazywać się 'username', 'ig_alias' itp.
+                querystring = {"username": target_profile} 
+                
+                headers = {
+                    "X-RapidAPI-Key": st.secrets["f0095ca367msh620a2faa5e84fe1p1ecb81jsn53fa436172f1"],
+                    "X-RapidAPI-Host": st.secrets["instagram-scraper-stable-api.p.rapidapi.com"]
+                }
+                
+                response = requests.get(url, headers=headers, params=querystring)
+                data = response.json()
+                
+                # Pobranie listy postów (ścieżka zależy od struktury JSON konkretnego API)
+                items = data.get("data", {}).get("items", [])[:10] 
+                
+                for post in items:
+                    likes = post.get("like_count", 0)
+                    comments = post.get("comment_count", 0)
+                    timestamp = post.get("taken_at", 0)
+                    shortcode = post.get("code", "")
+                    
                     posts_data.append({
-                        "date": post.date,
-                        "likes": post.likes,
-                        "comments": post.comments,
-                        "engagement": post.likes + post.comments,
-                        "url": f"https://www.instagram.com/p/{post.shortcode}/"
+                        "date": datetime.fromtimestamp(timestamp),
+                        "likes": likes,
+                        "comments": comments,
+                        "engagement": likes + comments,
+                        "url": f"https://www.instagram.com/p/{shortcode}/"
                     })
                     count += 1
                     
