@@ -25,7 +25,6 @@ if analyze_button and target_profile:
             if platform == "Instagram":
                 url = f"https://{st.secrets['RAPIDAPI_HOST']}/get_ig_user_posts.php"
                 
-                # Pakujemy dane w formacie, którego wymaga API
                 payload = {
                     "username_or_url": target_profile,
                     "amount": 10
@@ -37,16 +36,35 @@ if analyze_button and target_profile:
                     "Content-Type": "application/x-www-form-urlencoded"
                 }
                 
-                # UWAGA: Używamy post() i przekazujemy 'data' zamiast 'params'
                 response = requests.post(url, data=payload, headers=headers)
                 data = response.json()
                 
-                # --- TRYB DEBUGOWANIA ---
-                st.warning(f"Status HTTP: {response.status_code}")
-                st.info("Surowe dane z API:")
-                st.json(data)
-                st.stop()
-                # ------------------------
+                # Bezpieczne wyciąganie listy postów ze struktury API
+                items = data.get("data", {}).get("items", [])
+                if not items:
+                    items = data.get("items", data.get("data", []))
+                
+                for post in items[:10]:
+                    # Wyciąganie wartości, które znalazłaś
+                    likes = post.get("like_count", 0)
+                    comments = post.get("comment_count", 0)
+                    
+                    # Zabezpieczenie formatu czasu i linku
+                    timestamp = post.get("taken_at", post.get("timestamp", datetime.now().timestamp()))
+                    shortcode = post.get("code", post.get("shortcode", "brak"))
+                    
+                    try:
+                        post_date = datetime.fromtimestamp(timestamp)
+                    except:
+                        post_date = datetime.now()
+                        
+                    posts_data.append({
+                        "date": post_date,
+                        "likes": likes,
+                        "comments": comments,
+                        "engagement": likes + comments,
+                        "url": f"https://www.instagram.com/p/{shortcode}/"
+                    })
                 
                 for post in items:
                     likes = post.get("like_count", 0)
