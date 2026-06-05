@@ -291,9 +291,9 @@ Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro
                         file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.pdf",
                         mime="application/pdf"
                     )
-    
-except Exception as e:
-st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
 
-else: 
-    st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
+        except Exception as e:
+        st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
+
+            else: 
+                st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
