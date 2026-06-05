@@ -292,8 +292,8 @@ Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro
                         mime="application/pdf"
                     )
     
-    except Exception as e:
-                st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
+except Exception as e:
+st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
 
-    else: 
-        st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
+else: 
+    st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
