@@ -73,7 +73,21 @@ if analyze_button and target_profile:
                 # Najnowszy post (indeks 0)
                 latest_post = df.iloc[0]
                 v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
-
+try:
+                    url = st.secrets["SUPABASE_URL"]
+                    key = st.secrets["SUPABASE_KEY"]
+                    supabase: Client = create_client(url, key)
+                    
+                    supabase.table("historia_analiz").insert({
+                        "profil": target_profile,
+                        "platforma": platform,
+                        "srednia": int(avg_engagement),
+                        "ostatni_post": int(latest_post["engagement"]),
+                        "v_score": float(v_score)
+                    }).execute()
+                except Exception as e:
+                    st.error(f"Błąd zapisu do bazy: {e}")
+                    
                 # 4. Wyświetlanie wyników
                 col1, col2, col3 = st.columns(3)
                 col1.metric("Średnie zaangażowanie", int(avg_engagement))
