@@ -169,9 +169,9 @@ if analyze_button and target_profile:
                     st.error(f"Błąd zapisu do bazy: {e}")
 
                 # 4. Wyświetlanie wyników
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Średnie zaangażowanie", int(avg_engagement))
-                col2.metric("Ostatni post", int(latest_post["engagement"]))
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Średnie zaangażowanie", int(avg_engagement))
+            col2.metric("Ostatni post", int(latest_post["engagement"]))
                 
                 # Wskaźnik viralu
                 delta_color = "normal" if v_score < 1.2 else "inverse"
