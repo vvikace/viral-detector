@@ -150,13 +150,20 @@ if analyze_button and target_profile:
                 supabase = create_client(url, key)
 
                 data_to_save = {
-                    "id": random.randint(1000, 999999), 
                     "profil": target_profile,
                     "platforma": platform,
                     "srednia": int(avg_engagement),
                     "ostatni_post": int(latest_post["engagement"]),
                     "v_score": float(v_score)
+                    
                 }
+                
+                try:
+                    # Używamy insert dla pojedynczego słownika
+                    supabase.table("historia_analiz").insert(data_to_save).execute()
+                    st.success("Dane zapisane w bazie!")
+                except Exception as e:
+                    st.error(f"Błąd zapisu: {e}")
 
                 # Próba zapisu do bazy
                 supabase.table("historia_analiz").insert(data_to_save).execute()
