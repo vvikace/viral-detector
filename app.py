@@ -151,34 +151,33 @@ if analyze_button and target_profile:
                 v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
 
                 # --- ZAPIS DO BAZY SUPABASE ---
-            try:
-                    url = st.secrets["SUPABASE_URL"]
-                    key = st.secrets["SUPABASE_KEY"]
-                    supabase = create_client(url, key)
+try:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    supabase = create_client(url, key)
 
-                    data_to_save = {
-                        "profil": target_profile,
-                        "platforma": platform,
-                        "srednia": int(avg_engagement),
-                        "ostatni_post": int(latest_post["engagement"]),
-                        "v_score": float(v_score)
-                    }
-                    
-                    supabase.table("historia_analiz").insert(data_to_save).execute()
-                    st.success("Dane zapisane w bazie!")
-            except Exception as e:
-                    st.error(f"Błąd zapisu: {e}")
-                
+    data_to_save = {
+        "profil": target_profile,
+        "platforma": platform,
+        "srednia": int(avg_engagement),
+        "ostatni_post": int(latest_post["engagement"]),
+        "v_score": float(v_score)
+    }
+    
+    supabase.table("historia_analiz").insert(data_to_save).execute()
+    st.success("Dane zapisane w bazie!")
+except Exception as e:
+    st.error(f"Błąd zapisu: {e}")
 
-                # 4. Wyświetlanie wyników
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Średnie zaangażowanie", int(avg_engagement))
-                col2.metric("Ostatni post", int(latest_post["engagement"]))
-                
-                # Wskaźnik viralu
-                delta_color = "normal" if v_score < 1.2 else "inverse"
-                col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
+# 4. Wyświetlanie wyników
+# Te linie muszą być na tym samym poziomie wcięć co słowo 'try' powyżej
+col1, col2, col3 = st.columns(3)
+col1.metric("Średnie zaangażowanie", int(avg_engagement))
+col2.metric("Ostatni post", int(latest_post["engagement"]))
 
+# Wskaźnik viralu
+delta_color = "normal" if v_score < 1.2 else "inverse"
+col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
                 # 5. Alerty
                 if v_score > 1.5:
                     st.error(f"🚨 ALERT: Wykryto Viral! Wynik jest o {int((v_score-1)*100)}% lepszy niż średnia.")
