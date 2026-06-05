@@ -14,7 +14,7 @@ st.set_page_config(page_title="Viral detector", layout="wide")
 st.title("🕵️‍♂️ Viral Detector")
 
 # 2. Sidebar
-platform = st.sidebar.selectbox("Wybierz platformę:", ["Instagram", "Tiktok"])
+platform = st.sidebar.selectbox("Wybierz platformę:", ["Tiktok"])
 target_profile = st.sidebar.text_input("Wpisz nazwę profilu (np. wersow):", "")
 analyze_button = st.sidebar.button("Analizuj profil")
 
@@ -26,91 +26,8 @@ if analyze_button and target_profile:
             v_score = 0
             latest_post = {"engagement": 0, "url": ""}
             
-            if platform == "Instagram":
-                url = f"https://{st.secrets['RAPIDAPI_HOST']}/get_ig_user_posts.php"
-                
-                payload = {
-                    "username_or_url": target_profile,
-                    "amount": 10
-                }
-                
-                headers = {
-                    "X-RapidAPI-Key": st.secrets["RAPIDAPI_KEY"],
-                    "X-RapidAPI-Host": st.secrets["RAPIDAPI_HOST"],
-                    "Content-Type": "application/x-www-form-urlencoded"
-                }
-                
-                response = requests.post(url, data=payload, headers=headers)
-                data = response.json()
-                
-                # Pobieramy posty z klucza "posts", tak jak na Twoim screenie
-                items = data.get("posts", [])
-                
-                for item in items[:10]:
-                    # Skrypt wchodzi do pod-szufladki "node"
-                    node = item.get("node", item) 
-                    
-                    likes = node.get("like_count", 0)
-                    comments = node.get("comment_count", 0)
-                    
-                    timestamp = node.get("taken_at", node.get("timestamp", datetime.now().timestamp()))
-                    shortcode = node.get("code", node.get("shortcode", "brak"))
-                    
-                    try:
-                        post_date = datetime.fromtimestamp(timestamp)
-                    except:
-                        post_date = datetime.now()
-                        
-                    posts_data.append({
-                        "date": post_date,
-                        "likes": likes,
-                        "comments": comments,
-                        "engagement": likes + comments,
-                        "url": f"https://www.instagram.com/p/{shortcode}/"
-                    })
-                # Bezpieczne wyciąganie listy postów ze struktury API
-                items = data.get("data", {}).get("items", [])
-                if not items:
-                    items = data.get("items", data.get("data", []))
-                
-                for post in items[:10]:
-                    # Wyciąganie wartości, które znalazłaś
-                    likes = post.get("like_count", 0)
-                    comments = post.get("comment_count", 0)
-                    
-                    # Zabezpieczenie formatu czasu i linku
-                    timestamp = post.get("taken_at", post.get("timestamp", datetime.now().timestamp()))
-                    shortcode = post.get("code", post.get("shortcode", "brak"))
-                    
-                    try:
-                        post_date = datetime.fromtimestamp(timestamp)
-                    except:
-                        post_date = datetime.now()
-                        
-                    posts_data.append({
-                        "date": post_date,
-                        "likes": likes,
-                        "comments": comments,
-                        "engagement": likes + comments,
-                        "url": f"https://www.instagram.com/p/{shortcode}/"
-                    })
-                
-                for post in items:
-                    likes = post.get("like_count", 0)
-                    comments = post.get("comment_count", 0)
-                    timestamp = post.get("taken_at", 0)
-                    shortcode = post.get("code", "")
-                    
-                    posts_data.append({
-                        "date": datetime.fromtimestamp(timestamp),
-                        "likes": likes,
-                        "comments": comments,
-                        "engagement": likes + comments,
-                        "url": f"https://www.instagram.com/p/{shortcode}/"
-                    })
-                    count += 1
-                    
-            elif platform == "Tiktok":
+            
+            if platform == "Tiktok":
                 ydl_opts = {
                     'skip_download': True,
                     'playlist_items': '1-10',
@@ -120,11 +37,6 @@ if analyze_button and target_profile:
                 with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                     info = ydl.extract_info(f"https://www.tiktok.com/@{target_profile}", download=False)
                     for entry in info.get('entries', []):
-                        if not entry: continue
-                        likes = entry.get('like_count') or 0
-                        comments = entry.get('comment_count') or 0
-                        date_str = entry.get('upload_date')
-                        dt = datetime.strptime(date_str, '%Y%m%d') if date_str else datetime.now()
                         
                         posts_data.append({
                             "date": dt,
