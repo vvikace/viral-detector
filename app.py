@@ -164,38 +164,38 @@ if analyze_button and target_profile:
                         "v_score": float(v_score)
                     }
                     
-                    ssupabase.table("historia_analiz").insert(data_to_save).execute()
+                    supabase.table("historia_analiz").insert(data_to_save).execute()
                     st.success("Dane zapisane w bazie!")
             except Exception as e:
                     st.error(f"Błąd zapisu: {e}")
                 
 
                 # 4. Wyświetlanie wyników
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Średnie zaangażowanie", int(avg_engagement))
-                col2.metric("Ostatni post", int(latest_post["engagement"]))
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Średnie zaangażowanie", int(avg_engagement))
+            col2.metric("Ostatni post", int(latest_post["engagement"]))
                 
                 # Wskaźnik viralu
-                delta_color = "normal" if v_score < 1.2 else "inverse"
-                col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
+            delta_color = "normal" if v_score < 1.2 else "inverse"
+            col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
 
                 # 5. Alerty
-                if v_score > 1.5:
-                    st.error(f"🚨 ALERT: Wykryto Viral! Wynik jest o {int((v_score-1)*100)}% lepszy niż średnia.")
-                    st.write(f"Link do posta: {latest_post['url']}")
-                else:
-                    st.success("Posty są w normie. Brak anomalii viralowych.")
+            if v_score > 1.5:
+                st.error(f"🚨 ALERT: Wykryto Viral! Wynik jest o {int((v_score-1)*100)}% lepszy niż średnia.")
+                st.write(f"Link do posta: {latest_post['url']}")
+            else:
+                st.success("Posty są w normie. Brak anomalii viralowych.")
 
                 # Wykres
-                    st.subheader("Porównanie ostatnich postów")
-                    fig = px.bar(df, x="date", y="engagement", title="Zaangażowanie pod ostatnimi 10 postami")
-                    fig.add_hline(y=avg_engagement, line_dash="dash", line_color="red", annotation_text="Średnia")
-                    st.plotly_chart(fig, use_container_width=True)
+                st.subheader("Porównanie ostatnich postów")
+                fig = px.bar(df, x="date", y="engagement", title="Zaangażowanie pod ostatnimi 10 postami")
+                fig.add_hline(y=avg_engagement, line_dash="dash", line_color="red", annotation_text="Średnia")
+                st.plotly_chart(fig, use_container_width=True)
 
                 # 7. Raport
-                    st.subheader("Opcje raportowania")
+                st.subheader("Opcje raportowania")
                 
-                    report_text = f"""RAPORT ANALIZY KONKURENCJI
+                report_text = f"""RAPORT ANALIZY KONKURENCJI
 Data wygenerowania: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Profil śledzony: @{target_profile}
 --------------------------------------------------
@@ -213,87 +213,87 @@ LINK DO OSTATNIEGO POSTA:
 Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro
 """
 
-                    st.download_button(
-                        label="Pobierz raport tekstowy (.txt)",
-                        data=report_text,
-                        file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.txt",
-                        mime="text/plain"
-                    )
+                st.download_button(
+                    label="Pobierz raport tekstowy (.txt)",
+                    data=report_text,
+                    file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.txt",
+                    mime="text/plain"
+                )
 
                 # Eksport danych do CSV
-                    csv = df.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        label="Pobierz surowe dane (.csv)",
-                        data=csv,
-                        file_name=f"dane_{target_profile}.csv",
-                        mime="text/csv"
-                    )
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="Pobierz surowe dane (.csv)",
+                    data=csv,
+                    file_name=f"dane_{target_profile}.csv",
+                    mime="text/csv"
+                )
 
                 # --- Funkcja do PDF ---
-                    def generate_pdf():
-                        def clean(text):
-                            text = str(text)
-                            replacements = {
-                                'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
-                                'Ą':'A', 'Ć':'C', 'Ę':'E', 'Ł':'L', 'Ń':'N', 'Ó':'O', 'Ś':'S', 'Ź':'Z', 'Ż':'Z'
-                            }
-                            for pl, asc in replacements.items():
-                                text = text.replace(pl, asc)
-                            return text
+                def generate_pdf():
+                    def clean(text):
+                        text = str(text)
+                        replacements = {
+                            'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
+                            'Ą':'A', 'Ć':'C', 'Ę':'E', 'Ł':'L', 'Ń':'N', 'Ó':'O', 'Ś':'S', 'Ź':'Z', 'Ż':'Z'
+                        }
+                        for pl, asc in replacements.items():
+                            text = text.replace(pl, asc)
+                        return text
 
-                        pdf = FPDF()
-                        pdf.add_page()
+                    pdf = FPDF()
+                    pdf.add_page()
                     
                     # Tytuł
-                        pdf.set_font("Arial", 'B', 16)
-                        pdf.cell(200, 10, txt=clean("RAPORT ANALIZY KONKURENCJI"), ln=True, align='C')
+                    pdf.set_font("Arial", 'B', 16)
+                    pdf.cell(200, 10, txt=clean("RAPORT ANALIZY KONKURENCJI"), ln=True, align='C')
                     
                     # Dane podstawowe
-                        pdf.set_font("Arial", size=12)
-                        pdf.ln(10)
-                        pdf.cell(200, 10, txt=clean(f"Data wygenerowania: {datetime.now().strftime('%Y-%m-%d %H:%M')}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Platforma: {platform}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Profil sledzony: @{target_profile}"), ln=True)
-                        pdf.line(10, 50, 200, 50) 
-                        pdf.ln(5)
+                    pdf.set_font("Arial", size=12)
+                    pdf.ln(10)
+                    pdf.cell(200, 10, txt=clean(f"Data wygenerowania: {datetime.now().strftime('%Y-%m-%d %H:%M')}"), ln=True)
+                    pdf.cell(200, 10, txt=clean(f"Platforma: {platform}"), ln=True)
+                    pdf.cell(200, 10, txt=clean(f"Profil sledzony: @{target_profile}"), ln=True)
+                    pdf.line(10, 50, 200, 50) 
+                    pdf.ln(5)
                     
                     # Wyniki
-                        pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (10 postow): {int(avg_engagement)}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Ostatnie zaangazowanie: {int(latest_post['engagement'])}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Wskaznik V-Score: {v_score:.2f}x"), ln=True)
+                    pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (10 postow): {int(avg_engagement)}"), ln=True)
+                    pdf.cell(200, 10, txt=clean(f"Ostatnie zaangazowanie: {int(latest_post['engagement'])}"), ln=True)
+                    pdf.cell(200, 10, txt=clean(f"Wskaznik V-Score: {v_score:.2f}x"), ln=True)
                     
                     # Wniosek i alerty
-                        pdf.ln(5)
-                        pdf.set_font("Arial", 'B', 12)
-                        if v_score > 1.5:
-                            pdf.set_text_color(220, 53, 69) 
-                            pdf.cell(200, 10, txt=clean("WYKRYTO VIRAL! Post rosnie znacznie szybciej niz zwykle."), ln=True)
-                        else:
-                            pdf.set_text_color(40, 167, 69) 
-                            pdf.cell(200, 10, txt=clean("Brak anomalii. Wzrost stabilny."), ln=True)
+                    pdf.ln(5)
+                    pdf.set_font("Arial", 'B', 12)
+                    if v_score > 1.5:
+                        pdf.set_text_color(220, 53, 69) 
+                        pdf.cell(200, 10, txt=clean("WYKRYTO VIRAL! Post rosnie znacznie szybciej niz zwykle."), ln=True)
+                    else:
+                        pdf.set_text_color(40, 167, 69) 
+                        pdf.cell(200, 10, txt=clean("Brak anomalii. Wzrost stabilny."), ln=True)
                     
-                        pdf.set_text_color(0, 0, 0)
-                        pdf.set_font("Arial", size=10)
-                        pdf.cell(200, 10, txt=clean(f"Link do posta: {latest_post['url']}"), ln=True)
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.set_font("Arial", size=10)
+                    pdf.cell(200, 10, txt=clean(f"Link do posta: {latest_post['url']}"), ln=True)
     
                     # Stopka
-                        pdf.ln(10)
-                        pdf.set_font("Arial", 'I', size=8)
-                        pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
+                    pdf.ln(10)
+                    pdf.set_font("Arial", 'I', size=8)
+                    pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
                     
-                        return pdf.output(dest='S').encode('latin-1', 'replace')
+                    return pdf.output(dest='S').encode('latin-1', 'replace')
 
                 # Eksport do pdf
-                    pdf_data = generate_pdf()
-                    st.download_button(
-                        label="📄 Pobierz raport w PDF",
-                        data=pdf_data,
-                        file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf"
-                    )
+                pdf_data = generate_pdf()
+                st.download_button(
+                    label="📄 Pobierz raport w PDF",
+                    data=pdf_data,
+                    file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.pdf",
+                    mime="application/pdf"
+                )
 
-            except Exception as e:
-                st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
+        except Exception as e:
+            st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
 
-    else: 
-        st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
+else: 
+    st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
