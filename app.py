@@ -24,7 +24,7 @@ if analyze_button and target_profile:
             
             if platform == "Instagram":
                 # Adres URL z dokumentacji RapidAPI (Endpoint do pobierania postów użytkownika)
-                url = f"https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_followers_v2.php"
+                url = f"https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_posts.php"
                 
                 # Zależnie od API parametr może nazywać się 'username', 'ig_alias' itp.
                 querystring = {"username": target_profile} 
