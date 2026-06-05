@@ -23,18 +23,22 @@ if analyze_button and target_profile:
             posts_data = []
             
             if platform == "Instagram":
-                # Adres URL z dokumentacji RapidAPI (Endpoint do pobierania postów użytkownika)
-                url = f"https://instagram-scraper-stable-api.p.rapidapi.com/get_ig_user_posts.php"
+                url = f"https://{st.secrets['RAPIDAPI_HOST']}/get_ig_user_posts.php"
                 
-                # Zależnie od API parametr może nazywać się 'username', 'ig_alias' itp.
-                querystring = {"username": target_profile} 
+                # Pakujemy dane w formacie, którego wymaga API
+                payload = {
+                    "username_or_url": target_profile,
+                    "amount": 10
+                }
                 
                 headers = {
                     "X-RapidAPI-Key": st.secrets["RAPIDAPI_KEY"],
-                    "X-RapidAPI-Host": st.secrets["RAPIDAPI_HOST"]
+                    "X-RapidAPI-Host": st.secrets["RAPIDAPI_HOST"],
+                    "Content-Type": "application/x-www-form-urlencoded"
                 }
                 
-                response = requests.get(url, headers=headers, params=querystring)
+                # UWAGA: Używamy post() i przekazujemy 'data' zamiast 'params'
+                response = requests.post(url, data=payload, headers=headers)
                 data = response.json()
                 
                 # --- TRYB DEBUGOWANIA ---
@@ -42,7 +46,7 @@ if analyze_button and target_profile:
                 st.info("Surowe dane z API:")
                 st.json(data)
                 st.stop()
-                # ------------------------ 
+                # ------------------------
                 
                 for post in items:
                     likes = post.get("like_count", 0)
