@@ -148,7 +148,7 @@ if analyze_button and target_profile:
                     key = st.secrets["SUPABASE_KEY"]
                     supabase: Client = create_client(url, key)
                     
-                    data_to_save = {
+                    ddata_to_save = {
                     "profil": target_profile,
                     "platforma": platform,
                     "srednia": int(avg_engagement),
@@ -157,9 +157,12 @@ if analyze_button and target_profile:
                 }
                 
                 try:
-                    supabase.table("historia_analiz").upsert(data_to_save).execute()
+                    # Używamy insert, ale nie wysyłamy klucza "id", 
+                    # żeby baza sama mogła go nadać (auto-increment)
+                    supabase.table("historia_analiz").insert(data_to_save).execute()
                     st.success("Dane zapisane w bazie!")
                 except Exception as e:
+                    # Tutaj obsługujemy błąd, żeby strona się nie zawieszała
                     st.error(f"Błąd zapisu: {e}")
     
                 except Exception as db_e:
