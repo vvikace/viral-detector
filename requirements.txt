@@ -1,0 +1,6 @@
+streamlit
+pandas
+instaloader
+yt-dlp
+plotly
+fpdf
