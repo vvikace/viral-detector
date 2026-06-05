@@ -22,6 +22,9 @@ if analyze_button and target_profile:
     with st.spinner(f'Pobieranie danych z platformy {platform}...'):
         try:
             posts_data = []
+            avg_engagement = 0
+            v_score = 0
+            latest_post = {"engagement": 0, "url": ""}
             
             if platform == "Instagram":
                 url = f"https://{st.secrets['RAPIDAPI_HOST']}/get_ig_user_posts.php"
@@ -135,6 +138,9 @@ if analyze_button and target_profile:
                 st.error("Nie udało się pobrać danych lub profil jest pusty.")
             else:
                 df = pd.DataFrame(posts_data)
+                avg_engagement = df["engagement"].mean()
+                latest_post = df.iloc[0]
+                v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
 
                 # Średnia z postów 1-10
                 avg_engagement = df["engagement"].mean()
@@ -145,25 +151,22 @@ if analyze_button and target_profile:
 
                 # --- ZAPIS DO BAZY SUPABASE ---
             try:
-                url = st.secrets["SUPABASE_URL"]
-                key = st.secrets["SUPABASE_KEY"]
-                supabase = create_client(url, key)
+                    url = st.secrets["SUPABASE_URL"]
+                    key = st.secrets["SUPABASE_KEY"]
+                    supabase = create_client(url, key)
 
-                data_to_save = {
-                    "profil": target_profile,
-                    "platforma": platform,
-                    "srednia": int(avg_engagement),
-                    "ostatni_post": int(latest_post["engagement"]),
-                    "v_score": float(v_score)
+                    data_to_save = {
+                        "profil": target_profile,
+                        "platforma": platform,
+                        "srednia": int(avg_engagement),
+                        "ostatni_post": int(latest_post["engagement"]),
+                        "v_score": float(v_score)
+                    }
                     
-                }
-                
-                try:
-                    # Używamy insert dla pojedynczego słownika
                     supabase.table("historia_analiz").insert(data_to_save).execute()
                     st.success("Dane zapisane w bazie!")
                 except Exception as e:
-                    st.error(f"Błąd zapisu: {e}")
+                    st.error(f"Błąd zapisu do bazy: {e}")
 
                 # Próba zapisu do bazy
                 supabase.table("historia_analiz").insert(data_to_save).execute()
