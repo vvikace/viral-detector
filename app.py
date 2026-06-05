@@ -138,10 +138,11 @@ if analyze_button and target_profile:
                 st.error("Nie udało się pobrać danych lub profil jest pusty.")
             else:
                 df = pd.DataFrame(posts_data)
+
                 avg_engagement = df["engagement"].mean()
                 latest_post = df.iloc[0]
                 v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
-
+                
                 # Średnia z postów 1-10
                 avg_engagement = df["engagement"].mean()
                 
@@ -163,10 +164,10 @@ if analyze_button and target_profile:
                         "v_score": float(v_score)
                     }
                     
-                    supabase.table("historia_analiz").insert(data_to_save).execute()
+                    ssupabase.table("historia_analiz").insert(data_to_save).execute()
                     st.success("Dane zapisane w bazie!")
             except Exception as e:
-                st.error(f"Błąd zapisu do bazy: {e}")
+                    st.error(f"Błąd zapisu: {e}")
 
                 # 4. Wyświetlanie wyników
             col1, col2, col3 = st.columns(3)
