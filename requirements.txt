@@ -1,6 +1,6 @@
 streamlit
 pandas
-instaloader
+requests
 yt-dlp
 plotly
 fpdf
