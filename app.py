@@ -134,8 +134,11 @@ if analyze_button and target_profile:
                             "url": entry.get('webpage_url', '')
                         })
             
-            if not posts_data:
+            if not posts_data: 
                 st.error("Nie udało się pobrać danych lub profil jest pusty.")
+                st.write("Debugowanie: Sprawdź czy API zwróciło jakikolwiek wynik:")
+                # To wyświetli Ci, co dokładnie przyszło z serwera, zamiast pustej listy
+                st.write(data) 
             else:
                 df = pd.DataFrame(posts_data)
 
