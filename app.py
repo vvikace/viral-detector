@@ -174,15 +174,15 @@ if analyze_button and target_profile:
             col2.metric("Ostatni post", int(latest_post["engagement"]))
                 
                 # Wskaźnik viralu
-                delta_color = "normal" if v_score < 1.2 else "inverse"
-                col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
+            delta_color = "normal" if v_score < 1.2 else "inverse"
+            col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
 
                 # 5. Alerty
-                if v_score > 1.5:
-                    st.error(f"🚨 ALERT: Wykryto Viral! Wynik jest o {int((v_score-1)*100)}% lepszy niż średnia.")
-                    st.write(f"Link do posta: {latest_post['url']}")
-                else:
-                    st.success("Posty są w normie. Brak anomalii viralowych.")
+             if v_score > 1.5:
+                 st.error(f"🚨 ALERT: Wykryto Viral! Wynik jest o {int((v_score-1)*100)}% lepszy niż średnia.")
+                 st.write(f"Link do posta: {latest_post['url']}")
+             else:
+                 st.success("Posty są w normie. Brak anomalii viralowych.")
 
                 # Wykres
                 st.subheader("Porównanie ostatnich postów")
