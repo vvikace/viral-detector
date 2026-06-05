@@ -85,7 +85,7 @@ if analyze_button and target_profile:
                         "ostatni_post": int(latest_post["engagement"]),
                         "v_score": float(v_score)
                     }).execute()
-                except Exception as e:
+                except Exception as db_e:
                     st.error(f"Błąd zapisu do bazy: {e}")
                     
                 # 4. Wyświetlanie wyników
