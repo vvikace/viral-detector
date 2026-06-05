@@ -30,8 +30,8 @@ if analyze_button and target_profile:
                 querystring = {"username": target_profile} 
                 
                 headers = {
-                    "X-RapidAPI-Key": st.secrets["f0095ca367msh620a2faa5e84fe1p1ecb81jsn53fa436172f1"],
-                    "X-RapidAPI-Host": st.secrets["instagram-scraper-stable-api.p.rapidapi.com"]
+                    "X-RapidAPI-Key": st.secrets["RAPIDAPI_KEY"],
+                    "X-RapidAPI-Host": st.secrets["RAPIDAPI_HOST"]
                 }
                 
                 response = requests.get(url, headers=headers, params=querystring)
