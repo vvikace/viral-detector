@@ -38,7 +38,14 @@ if analyze_button and target_profile:
                 
                 response = requests.post(url, data=payload, headers=headers)
                 data = response.json()
+                response = requests.post(url, data=payload, headers=headers)
+                data = response.json()
                 
+                # --- WŁĄCZAMY TO NA CHWILĘ ---
+                st.info("Surowe dane z API:")
+                st.json(data)
+                st.stop()
+                # -----------------------------
                 # Bezpieczne wyciąganie listy postów ze struktury API
                 items = data.get("data", {}).get("items", [])
                 if not items:
