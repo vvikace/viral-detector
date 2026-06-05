@@ -73,7 +73,7 @@ if analyze_button and target_profile:
                 # Najnowszy post (indeks 0)
                 latest_post = df.iloc[0]
                 v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
-try:
+            try:
                     url = st.secrets["SUPABASE_URL"]
                     key = st.secrets["SUPABASE_KEY"]
                     supabase: Client = create_client(url, key)
