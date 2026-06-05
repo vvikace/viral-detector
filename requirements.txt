@@ -4,3 +4,4 @@ instaloader
 yt-dlp
 plotly
 fpdf
+supabase
