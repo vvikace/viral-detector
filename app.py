@@ -1,3 +1,4 @@
+import random
 import requests
 import streamlit as st
 import pandas as pd
@@ -149,6 +150,7 @@ if analyze_button and target_profile:
                 supabase = create_client(url, key)
 
                 data_to_save = {
+                    "id": random.randint(1000, 999999), 
                     "profil": target_profile,
                     "platforma": platform,
                     "srednia": int(avg_engagement),
