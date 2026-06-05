@@ -37,8 +37,12 @@ if analyze_button and target_profile:
                 response = requests.get(url, headers=headers, params=querystring)
                 data = response.json()
                 
-                # Pobranie listy postów (ścieżka zależy od struktury JSON konkretnego API)
-                items = data.get("data", {}).get("items", [])[:10] 
+                # --- TRYB DEBUGOWANIA ---
+                st.warning(f"Status HTTP: {response.status_code}")
+                st.info("Surowe dane z API:")
+                st.json(data)
+                st.stop()
+                # ------------------------ 
                 
                 for post in items:
                     likes = post.get("like_count", 0)
