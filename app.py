@@ -165,16 +165,8 @@ if analyze_button and target_profile:
                     
                     supabase.table("historia_analiz").insert(data_to_save).execute()
                     st.success("Dane zapisane w bazie!")
-                except Exception as e:
-                    st.error(f"Błąd zapisu do bazy: {e}")
-
-                # Próba zapisu do bazy
-                supabase.table("historia_analiz").insert(data_to_save).execute()
-                st.success("Dane zapisane w bazie!")
-
             except Exception as e:
-                # Jeden, solidny blok obsługi błędów
-                st.error(f"Błąd zapisu do bazy: {e}")
+                    st.error(f"Błąd zapisu do bazy: {e}")
 
                 # 4. Wyświetlanie wyników
                 col1, col2, col3 = st.columns(3)
