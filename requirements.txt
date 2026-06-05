@@ -1,7 +1,7 @@
 streamlit
 pandas
-requests
 yt-dlp
 plotly
 fpdf
 supabase
+requests
