@@ -38,14 +38,32 @@ if analyze_button and target_profile:
                 
                 response = requests.post(url, data=payload, headers=headers)
                 data = response.json()
-                response = requests.post(url, data=payload, headers=headers)
-                data = response.json()
                 
-                # --- WŁĄCZAMY TO NA CHWILĘ ---
-                st.info("Surowe dane z API:")
-                st.json(data)
-                st.stop()
-                # -----------------------------
+                # Pobieramy posty z klucza "posts", tak jak na Twoim screenie
+                items = data.get("posts", [])
+                
+                for item in items[:10]:
+                    # Skrypt wchodzi do pod-szufladki "node"
+                    node = item.get("node", item) 
+                    
+                    likes = node.get("like_count", 0)
+                    comments = node.get("comment_count", 0)
+                    
+                    timestamp = node.get("taken_at", node.get("timestamp", datetime.now().timestamp()))
+                    shortcode = node.get("code", node.get("shortcode", "brak"))
+                    
+                    try:
+                        post_date = datetime.fromtimestamp(timestamp)
+                    except:
+                        post_date = datetime.now()
+                        
+                    posts_data.append({
+                        "date": post_date,
+                        "likes": likes,
+                        "comments": comments,
+                        "engagement": likes + comments,
+                        "url": f"https://www.instagram.com/p/{shortcode}/"
+                    })
                 # Bezpieczne wyciąganie listy postów ze struktury API
                 items = data.get("data", {}).get("items", [])
                 if not items:
