@@ -134,7 +134,7 @@ if analyze_button and target_profile:
                             "url": entry.get('webpage_url', '')
                         })
             
-            if not posts_data: 
+            if not posts_data:
                 st.error("Nie udało się pobrać danych lub profil jest pusty.")
             else:
                 df = pd.DataFrame(posts_data)
