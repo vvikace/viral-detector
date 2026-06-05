@@ -143,30 +143,26 @@ if analyze_button and target_profile:
                 v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
 
                 # --- ZAPIS DO BAZY SUPABASE ---
-                try:
-                    url = st.secrets["SUPABASE_URL"]
-                    key = st.secrets["SUPABASE_KEY"]
-                    supabase: Client = create_client(url, key)
-                    
-                    data_to_save = {
-                    "profil": target_profile,
-                    "platforma": platform,
-                    "srednia": int(avg_engagement),
-                    "ostatni_post": int(latest_post["engagement"]),
-                    "v_score": float(v_score)
-                }
-                
-                try:
-                    # Próba zapisu do bazy
-                    supabase.table("historia_analiz").insert(data_to_save).execute()
-                    st.success("Dane zapisane w bazie!")
-                except Exception as e:
-                    # Jeśli wystąpi jakikolwiek błąd, wyświetlamy go tutaj
-                    st.error(f"Błąd zapisu: {e}")
-    
-                except Exception as db_e:
-                    st.warning(f"Nie udało się zapisać do bazy (sprawdź klucze API): {db_e}")
-                # ------------------------------
+try:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    supabase = create_client(url, key)
+
+    data_to_save = {
+        "profil": target_profile,
+        "platforma": platform,
+        "srednia": int(avg_engagement),
+        "ostatni_post": int(latest_post["engagement"]),
+        "v_score": float(v_score)
+    }
+
+    # Próba zapisu do bazy
+    supabase.table("historia_analiz").insert(data_to_save).execute()
+    st.success("Dane zapisane w bazie!")
+
+except Exception as e:
+    # Jeden, solidny blok obsługi błędów
+    st.error(f"Błąd zapisu do bazy: {e}")
 
                 # 4. Wyświetlanie wyników
                 col1, col2, col3 = st.columns(3)
