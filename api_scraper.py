@@ -5,12 +5,12 @@ import os
 
 def get_instagram_posts(target_profile):
     rapidapi_key = os.environ.get("RAPIDAPI_KEY")
-    rapidapi_host = "instagram191.p.rapidapi.com/v4/user-posts" 
+    rapidapi_host = "instagram191.p.rapidapi.com/v2/user/posts/" 
     
     if not rapidapi_key:
         return [], "Brak klucza API dla Instagrama."
 
-    url = "https://instagram191.p.rapidapi.com/v4/user-posts"
+    url = "https://instagram191.p.rapidapi.com/v2/user/posts/"
     
     querystring = {"username": target_profile, "count": "10"}
     
