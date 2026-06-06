@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 def get_app_layout():
     return dbc.Container([
         html.H1("🕵️‍♂️ VIRAL DETECTOR", className="text-center mt-5 mb-3", style={'fontWeight': '900', 'background': 'linear-gradient(45deg, #00f2fe, #fe0979)', 'WebkitBackgroundClip': 'text', 'WebkitTextFillColor': 'transparent'}),
-        html.P("Monitoruj zasięgi. Wykrywaj anomalie.", className="text-center text-muted mb-5"),
+        html.P("Monitoruj zasięgi. Wyłapuj odchylenia.", className="text-center text-muted mb-5"),
         
         dbc.Card([
             dbc.CardBody([
