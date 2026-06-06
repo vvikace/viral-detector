@@ -12,17 +12,20 @@ def get_app_layout():
                     dbc.Col([
                         html.Label("Platforma", className="fw-bold text-info"),
                         dcc.Dropdown(id='platform-select', options=[{'label': 'TikTok', 'value': 'Tiktok'}, {'label': 'Instagram', 'value': 'Instagram'}], value='Tiktok', clearable=False, className="text-dark")
-                    ], md=4),
+                        ], md=3), # Zmniejszyłem szerokość
                     dbc.Col([
                         html.Label("Nazwa profilu", className="fw-bold text-info"),
                         dcc.Input(id='profile-input', type='text', placeholder='np. wersow', className="form-control bg-dark text-white border-info")
-                    ], md=5),
+                        ], md=4),
                     dbc.Col([
-                        html.Button('🔥 ANALIZUJ', id='analyze-button', n_clicks=0, className="btn btn-info w-100 fw-bold mt-4", style={'boxShadow': '0 0 15px rgba(0, 242, 254, 0.4)'})
-                    ], md=3)
-                ], className="g-3 align-items-center")
-            ])
-        ], className="border-info mb-4", style={'backgroundColor': '#111'}),
+                        html.Button('🔥 ANALIZUJ', id='analyze-button', n_clicks=0, className="btn btn-info w-100 fw-bold mt-4"),
+                        ], md=2),
+                    dbc.Col([
+                        html.Button('🔄 ODŚWIEŻ', id='btn-force-refresh', n_clicks=0, className="btn btn-warning w-100 fw-bold mt-4"),
+                        ], md=3)
+                    ], className="g-3 align-items-center")
+                ])
+            ], className="border-info mb-4", style={'backgroundColor': '#111'}),
         
         html.Div(id='error-message', className="text-danger text-center fw-bold mb-3"),
         html.Div(id='success-message', className="text-success text-center fw-bold mb-3"),
