@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from supabase import create_client
 from fpdf import FPDF
 
-# Importujemy komponenty z naszych własnych plików!
+# Importujemy komponenty z naszych własnych plików
 from layout import get_app_layout
 from api_scraper import get_instagram_posts, get_tiktok_posts
 
@@ -18,7 +18,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 server = app.server
 app.title = "Viral Detector"
 
-# 1. Podpinamy interfejs z pliku layout.py
+# 1. Interfejs z pliku layout.py
 app.layout = get_app_layout()
 
 # 2. Logika
@@ -39,7 +39,7 @@ def update_dashboard(n_clicks, target_profile, platform):
     posts_data = []
     error_msg = ""
     
-    # Wywołanie skryptów pobierania z pliku api_scraper.py
+    # Skryptów pobierania z pliku api_scraper.py
     if platform == "Instagram":
         posts_data, error_msg = get_instagram_posts(target_profile)
     elif platform == "Tiktok":
@@ -51,13 +51,13 @@ def update_dashboard(n_clicks, target_profile, platform):
     if not posts_data:
         return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych dla @{target_profile} ({platform}).", ""
         
-    # Obliczenia analityczne
+    # Obliczenia analityczne vscore
     df = pd.DataFrame(posts_data)
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
-    # Zapis do Supabase
+    # Supabase
     db_message = ""
     try:
         db_url = os.environ.get("SUPABASE_URL")
@@ -75,7 +75,8 @@ def update_dashboard(n_clicks, target_profile, platform):
             db_message = "Zapisano w bazie!"
     except Exception as e:
         db_message = f"(Błąd zapisu DB: {e})"
-
+        
+    # Metryki i wykresy
     metrics_html = [
         html.Div(className='text-center', children=[
             html.H4(["Średnie zaangażowanie ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
@@ -98,7 +99,7 @@ def update_dashboard(n_clicks, target_profile, platform):
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
-    # NOWE: Zapisujemy czyste dane do pamięci przeglądarki na potrzeby PDF
+    # Czyste dane do pamięci przeglądarki na potrzeby PDF
     stored_data = {
         "profile": target_profile,
         "platform": platform,
@@ -109,7 +110,7 @@ def update_dashboard(n_clicks, target_profile, platform):
     
     return metrics_html, fig, {'display': 'block'}, "", db_message, stored_data, {'display': 'inline-block'}
 
-# CALLBACK 2: Generowanie raportu PDF (uruchamia się po kliknięciu POBIERZ)
+# CALLBACK 2: Generowanie raportu PDF (po kliknięciu POBIERZ)
 @app.callback(
     Output("download-dataframe-pdf", "data"),
     Input("btn-download-pdf", "n_clicks"),
