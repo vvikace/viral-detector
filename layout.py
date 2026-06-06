@@ -36,8 +36,8 @@ def get_app_layout():
         html.Div(id='success-message', className="text-success text-center fw-bold mb-3"),
         
         dcc.Loading(id="loading", type="cube", color="#00f2fe", children=[
-        html.Div(id='metrics-output', className='d-flex justify-content-around mt-4'),
-        dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),
+            html.Div(id='metrics-output', className='d-flex justify-content-around mt-4'),
+            dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),
         
         ]),
         
