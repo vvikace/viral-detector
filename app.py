@@ -85,7 +85,7 @@ def update_dashboard(n1, n2, target_profile, platform):
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        df['date'] = df['date'].dt.strftime('%m-%d %H:%M')
+        df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
@@ -127,7 +127,11 @@ def update_dashboard(n1, n2, target_profile, platform):
         ])
     ]
     
-    fig = px.bar(df, x="date", y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"])
+    fig = px.bar(df, x=df.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"])
+    
+    if 'date_label' in df.columns:
+        fig.update_xaxes(tickvals=df.index, ticktext=df['date_label'], title="Data")
+        
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
