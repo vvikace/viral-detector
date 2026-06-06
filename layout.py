@@ -37,11 +37,8 @@ def get_app_layout():
         
         dcc.Loading(id="loading", type="cube", color="#00f2fe", children=[
         html.Div(id='metrics-output', className='d-flex justify-content-around mt-4'),
-        dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),  # <--- TU MUSI BYĆ PRZECINEK!
+        dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),
         
-        html.Div(className='text-center', children=[
-            html.H4("Dynamika (10 ostatnich)"),
-            html.H2(id='trend-output', children="0%")
         ]),
         
         html.Div(
