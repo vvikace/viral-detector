@@ -1,5 +1,5 @@
 import dash
-from dash import Input, Output, State, html
+from dash import Input, Output, State, html, dcc, ctx
 import dash_bootstrap_components as dbc
 import plotly.express as px
 import pandas as pd
@@ -28,30 +28,48 @@ app.layout = get_app_layout()
      Output('engagement-graph', 'style'),
      Output('error-message', 'children'),
      Output('success-message', 'children'),
-     Output('store-data', 'data'),           
-     Output('btn-download-pdf', 'style')],   
-    [Input('analyze-button', 'n_clicks')],
+     Output('store-data', 'data'),
+     Output('btn-download-pdf', 'style')],
+    [Input('analyze-button', 'n_clicks'),
+     Input('btn-force-refresh', 'n_clicks')], # DODAJEMY DRUGI INPUT
     [State('profile-input', 'value'),
      State('platform-select', 'value')]
 )
-def update_dashboard(n_clicks, target_profile, platform):
-    if n_clicks == 0 or not target_profile:
-        return "", {}, {'display': 'none'}, "", ""
+def update_dashboard(n1, n2, target_profile, platform):
+    if not target_profile or (n1 == 0 and n2 == 0):
+        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}
+    
+    # SPRAWDZAMY KTÓRY PRZYCISK KLIKNIĘTO
+    trigger_id = ctx.triggered_id
     
     posts_data = []
     error_msg = ""
     
-    # Skryptów pobierania z pliku api_scraper.py
-    if platform == "Instagram":
-        posts_data, error_msg = get_instagram_posts(target_profile)
-    elif platform == "Tiktok":
-        posts_data, error_msg = get_tiktok_posts(target_profile)
+    if trigger_id == 'btn-force-refresh':
+        # ŚWIEŻE DANE Z SIECI
+        if platform == "Instagram": posts_data, error_msg = get_instagram_posts(target_profile)
+        else: posts_data, error_msg = get_tiktok_posts(target_profile)
+    else:
+        # DANE Z BAZY (Szybkie)
+        supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
+        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).order("timestamp", desc=True).limit(10).execute()
         
+        # TU JEST KLUCZ: Uzupełniamy listę danymi z response.data
+        posts_data = []
+        for item in response.data:
+            posts_data.append({
+                "date": item.get('timestamp'), 
+                "engagement": item.get('ostatni_post', 0) 
+            })
+            
+        if not posts_data:
+            error_msg = "Brak danych w bazie. Kliknij Odśwież."
+    
     if error_msg:
-        return "", {}, {'display': 'none'}, error_msg, ""
+            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
         
-    if not posts_data:
-        return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych dla @{target_profile} ({platform}).", ""
+        if not posts_data:
+            return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych.", "", None, {'display': 'none'}
         
     # Obliczenia analityczne vscore
     df = pd.DataFrame(posts_data)
