@@ -48,7 +48,7 @@ def get_app_layout():
         ]),
         
         # NOWE: Techniczne komponenty Dasha do pobierania plików i zapamiętywania danych
-        dcc.Download(id="download-dataframe-pdf"),
-        dcc.Store(id='store-data')
+dcc.Download(id="download-dataframe-pdf"),
+dcc.Store(id='store-data')
         
     ], fluid=True, style={'maxWidth': '1000px'})
