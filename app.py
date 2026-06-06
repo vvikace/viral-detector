@@ -9,7 +9,7 @@ from supabase import create_client
 from fpdf import FPDF
 import threading
 import time
-from update_db import run_update 
+from update_db import run_update
 from datetime import datetime
 
 def bot_loop():
@@ -72,13 +72,14 @@ def update_dashboard(n1, n2, target_profile, platform):
     else:
         # DANE Z BAZY (Szybkie)
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
+        # Zmiana z timestamp na data
         response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).order("data", desc=True).limit(10).execute()
         
-        # TU JEST KLUCZ: Uzupełniamy listę danymi z response.data
+        # Uzupełniamy listę danymi z response.data
         posts_data = []
         for item in response.data:
             posts_data.append({
-                "date": item.get('timestamp'), 
+                "date": item.get('data'), # Pobieramy kolumnę 'data'
                 "engagement": item.get('ostatni_post', 0) 
             })
             
@@ -86,23 +87,29 @@ def update_dashboard(n1, n2, target_profile, platform):
             error_msg = "Brak danych w bazie. Kliknij Odśwież."
     
     if error_msg:
-            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
+        return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}, "", {'color': 'white'}
         
     if not posts_data:
-        return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych.", "", None, {'display': 'none'}
+        return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych.", "", None, {'display': 'none'}, "", {'color': 'white'}
         
-    # Obliczenia analityczne vscore
+    # Obliczenia analityczne
     df = pd.DataFrame(posts_data)
+    
+    # Konwersja daty na typ odpowiedni dla Plotly (dodane żeby były słupki)
+    if 'date' in df.columns:
+        df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        
     if len(df) >= 2:
         pierwszy = df.iloc[-1]["engagement"]  # Najstarszy w bazie (z listy 10)
         ostatni = df.iloc[0]["engagement"]    # Najnowszy
         
-        procentowa_zmiana = ((ostatni - pierwszy) / pierwszy) * 100
+        procentowa_zmiana = ((ostatni - pierwszy) / pierwszy) * 100 if pierwszy > 0 else 0
         trend_text = f"{procentowa_zmiana:+.1f}%"
         trend_color = "#00f2fe" if procentowa_zmiana >= 0 else "#fe0979"
     else:
-        trend_text = "Brak danych do trendu"
+        trend_text = "Brak danych"
         trend_color = "white"
+        
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
@@ -158,7 +165,18 @@ def update_dashboard(n1, n2, target_profile, platform):
         "vscore": v_score
     }
     
-    return metrics_html, fig, {'display': 'block'}, "", db_message, stored_data, {'display': 'inline-block'}
+    # Zwracamy wszystkie 9 elementów zgodnie z Output
+    return (
+        metrics_html, 
+        fig, 
+        {'display': 'block'}, 
+        "", 
+        db_message, 
+        stored_data, 
+        {'display': 'inline-block'},
+        trend_text, 
+        {'color': trend_color}
+    )
 
 # CALLBACK 2: Generowanie raportu PDF (po kliknięciu POBIERZ)
 @app.callback(
@@ -211,9 +229,7 @@ def generate_pdf(n_clicks, stored_data):
     pdf.set_font("Arial", 'I', size=8)
     pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
     
-    # Kodowanie pliku do pobrania bezpośrednio przez przeglądarkę
     return dcc.send_bytes(pdf.output(dest='S').encode('latin-1', 'replace'), f"raport_{stored_data['profile']}.pdf")
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-    
