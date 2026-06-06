@@ -138,7 +138,9 @@ def update_dashboard(n1, n2, target_profile, platform):
     prevent_initial_call=True
 )
 def generate_pdf(n_clicks, stored_data):
+    print(f"DEBUG: Stored data to PDF: {stored_data}") 
     if not stored_data:
+        print("DEBUG: Brak danych w store!")
         return dash.no_update
 
     def clean(text):
