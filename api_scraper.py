@@ -5,18 +5,18 @@ import os
 
 def get_instagram_posts(target_profile):
     rapidapi_key = os.environ.get("RAPIDAPI_KEY")
-    rapidapi_host = "instagram-scraper21.p.rapidapi.com/api/v1/post-info" 
+    rapidapi_host = "instagram191.p.rapidapi.com/v4/user-posts" 
     
     if not rapidapi_key:
         return [], "Brak klucza API dla Instagrama."
 
-    url = "https://instagram-scraper21.p.rapidapi.com/api/v1/user/posts"
+    url = "https://instagram191.p.rapidapi.com/v4/user-posts"
     
     querystring = {"username": target_profile, "count": "10"}
     
     headers = {
         "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "instagram-scraper21.p.rapidapi.com"
+        "x-rapidapi-host": "instagram191.p.rapidapi.com"
     }
     
     try:
