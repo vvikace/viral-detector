@@ -22,13 +22,15 @@ def get_instagram_posts(target_profile):
     try:
         response = requests.get(url, headers=headers, params=querystring)
         data = response.json()
-
-        print(f"DEBUG API RESPONSE: {data}")
-
-        items = data.get("data", {}).get("items", [])
+        
+        print(f"DEBUG: Klucze w odpowiedzi API: {data.keys()}") 
+        
+        items = data.get("items", []) 
         
         if not items:
-            return [], "Brak postów dla tego profilu."
+            print("DEBUG: Nie znaleziono klucza 'items', sprawdzam inne...")
+
+            print(f"DEBUG: Próbka danych: {str(data)[:200]}")
 
         posts_data = []
         for item in items[:10]:
