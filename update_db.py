@@ -17,7 +17,7 @@ def run_update():
         nazwa = p['nazwa']
         platforma = p['platforma']
         
-        # 3. Pobierz dane 
+        # 3. Pobierz dane (platforma.lower() chroni przed błędami typu 'TikTok' vs 'Tiktok')
         if platforma.lower() == "tiktok":
             print(f"Bot: Pobieram posty z API dla profilu @{nazwa}...")
             data, error_msg = get_tiktok_posts(nazwa)
@@ -41,6 +41,7 @@ def run_update():
                 supabase.table("historia_analiz").insert(entry).execute()
                 print(f"Bot: SUKCES - Zaktualizowano dane dla @{nazwa} w bazie!")
             else:
+                # Jeśli API nic nie zwróciło, teraz bot nam o tym napisze:
                 print(f"Bot: BŁĄD POBIERANIA - Nie mam danych dla @{nazwa}. Powód: {error_msg}")
         else:
             print(f"Bot: Pomijam platformę {platforma} dla profilu {nazwa}")
