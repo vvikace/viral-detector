@@ -43,6 +43,8 @@ app.layout = get_app_layout()
 # 2. Logika
 @app.callback(
     [Output('metrics-output', 'children'),
+     Output('trend-output', 'children'), 
+     Output('trend-output', 'style'),
      Output('engagement-graph', 'figure'),
      Output('engagement-graph', 'style'),
      Output('error-message', 'children'),
@@ -56,7 +58,7 @@ app.layout = get_app_layout()
 )
 def update_dashboard(n1, n2, target_profile, platform):
     if not target_profile or (n1 == 0 and n2 == 0):
-        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}
+        return metrics_html, trend_text, {'color': kolor}
     
     # SPRAWDZAMY KTÓRY PRZYCISK KLIKNIĘTO
     trigger_id = ctx.triggered_id
