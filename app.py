@@ -29,7 +29,7 @@ thread.start()
 
 # Import komponentów z własnych plików
 from layout import get_app_layout
-from api_scraper import get_instagram_posts, get_tiktok_posts
+from api_scraper import get_tiktok_posts
 
 load_dotenv()
 
