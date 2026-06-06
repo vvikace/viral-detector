@@ -22,35 +22,10 @@ def get_instagram_posts(target_profile):
     try:
         response = requests.get(url, headers=headers, params=querystring)
         data = response.json()
-        
         print(f"DEBUG: Odpowiedź API: {data}")
-    
-    return data, "" 
-        
-        items = data.get("items", []) 
-        
-        if not items:
-            print("DEBUG: Nie znaleziono klucza 'items', sprawdzam inne...")
-
-            print(f"DEBUG: Próbka danych: {str(data)[:200]}")
-
-        posts_data = []
-        for item in items[:10]:
-           
-            likes = item.get("like_count", 0)
-            comments = item.get("comment_count", 0)
-            
-            timestamp = item.get("taken_at_timestamp", datetime.now().timestamp())
-            
-            posts_data.append({
-                "date": datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d'), 
-                "engagement": likes + comments
-            })
-            
-        return posts_data, ""
-        
-    except Exception as e:
-        return [], f"Błąd pobierania z Instagrama: {str(e)}"
+        return data, ""
+    except Exception as e: 
+        return [], f"Błąd pobierania: {str(e)}"
 
 def get_tiktok_posts(target_profile):
     posts_data = []
