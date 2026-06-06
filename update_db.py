@@ -11,14 +11,17 @@ def run_update():
     # 2. Pobierz listę profili do śledzenia
     profiles = supabase.table("obserwowane_profile").select("*").execute().data
     
+    print(f"Bot: Znalazłem {len(profiles)} profili w bazie obserwowanych.")
+    
     for p in profiles:
         nazwa = p['nazwa']
         platforma = p['platforma']
         
-        # 3. Pobierz dane
-        if platforma == "Tiktok":
-            data, _ = get_tiktok_posts(nazwa)
-
+        # 3. Pobierz dane 
+        if platforma.lower() == "tiktok":
+            print(f"Bot: Pobieram posty z API dla profilu @{nazwa}...")
+            data, error_msg = get_tiktok_posts(nazwa)
+            
             if data:
                 # 4. Oblicz średnią i zapisz do tabeli historii
                 df = pd.DataFrame(data)
@@ -34,10 +37,13 @@ def run_update():
                     "v_score": float(v_score),
                     "data": datetime.now().isoformat()
                 }
+                
                 supabase.table("historia_analiz").insert(entry).execute()
-                print(f"Zaktualizowano: {nazwa}")
+                print(f"Bot: SUKCES - Zaktualizowano dane dla @{nazwa} w bazie!")
+            else:
+                print(f"Bot: BŁĄD POBIERANIA - Nie mam danych dla @{nazwa}. Powód: {error_msg}")
         else:
-            print(f"Pomijam {platforma} dla profilu {nazwa}")
+            print(f"Bot: Pomijam platformę {platforma} dla profilu {nazwa}")
 
 if __name__ == "__main__":
     run_update()
