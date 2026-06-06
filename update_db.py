@@ -23,7 +23,12 @@ def run_update():
         if data:
             # 4. Oblicz średnią i zapisz do tabeli historii
             avg_eng = pd.DataFrame(data)["engagement"].mean()
-            entry = {"profil": nazwa, "platforma": platforma, "srednia": int(avg_eng)}
+            entry = {
+                "profil": nazwa,
+                "platforma": platforma,
+                "srednia": int(avg_eng),
+                "data": datetime.now().isoformat()
+            }
             supabase.table("historia_analiz").insert(entry).execute()
             print(f"Zaktualizowano: {nazwa}")
 
