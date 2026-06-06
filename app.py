@@ -27,7 +27,6 @@ thread = threading.Thread(target=bot_loop, daemon=True)
 thread.start()
 # ----------------------------
 
-# Import komponentów z własnych plików
 from layout import get_app_layout
 from api_scraper import get_tiktok_posts
 
@@ -37,10 +36,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 server = app.server
 app.title = "Viral Detector"
 
-# 1. Interfejs z pliku layout.py
 app.layout = get_app_layout()
 
-# 2. Logika
 @app.callback(
     [Output('metrics-output', 'children'),
      Output('engagement-graph', 'figure'),
@@ -48,9 +45,7 @@ app.layout = get_app_layout()
      Output('error-message', 'children'),
      Output('success-message', 'children'),
      Output('store-data', 'data'),
-     Output('btn-download-pdf', 'style'),
-     Output('trend-output', 'children'), 
-     Output('trend-output', 'style')],
+     Output('btn-download-pdf', 'style')],
     [Input('analyze-button', 'n_clicks'),
      Input('btn-force-refresh', 'n_clicks')],
     [State('profile-input', 'value'),
@@ -58,28 +53,22 @@ app.layout = get_app_layout()
 )
 def update_dashboard(n1, n2, target_profile, platform):
     if not target_profile or (n1 == 0 and n2 == 0):
-        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}, "", {'color': 'white'}
+        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}
     
-    # SPRAWDZAMY KTÓRY PRZYCISK KLIKNIĘTO
     trigger_id = ctx.triggered_id
-    
     posts_data = []
     error_msg = ""
     
     if trigger_id == 'btn-force-refresh':
-        # ŚWIEŻE DANE Z SIECI - zawsze TikTok
         posts_data, error_msg = get_tiktok_posts(target_profile)
     else:
-        # DANE Z BAZY (Szybkie)
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
-        # Zmiana z timestamp na data
         response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).order("data", desc=True).limit(10).execute()
         
-        # Uzupełniamy listę danymi z response.data
         posts_data = []
         for item in response.data:
             posts_data.append({
-                "date": item.get('data'), # Pobieramy kolumnę 'data'
+                "date": item.get('data'), 
                 "engagement": item.get('ostatni_post', 0) 
             })
             
@@ -87,34 +76,20 @@ def update_dashboard(n1, n2, target_profile, platform):
             error_msg = "Brak danych w bazie. Kliknij Odśwież."
     
     if error_msg:
-        return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}, "", {'color': 'white'}
+        return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
         
     if not posts_data:
-        return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych.", "", None, {'display': 'none'}, "", {'color': 'white'}
+        return "", {}, {'display': 'none'}, "Nie udało się pobrać danych.", "", None, {'display': 'none'}
         
-    # Obliczenia analityczne
+    # Tworzymy DataFrame i poprawiamy format daty
     df = pd.DataFrame(posts_data)
-    
-    # Konwersja daty na typ odpowiedni dla Plotly (dodane żeby były słupki)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        
-    if len(df) >= 2:
-        pierwszy = df.iloc[-1]["engagement"]  # Najstarszy w bazie (z listy 10)
-        ostatni = df.iloc[0]["engagement"]    # Najnowszy
-        
-        procentowa_zmiana = ((ostatni - pierwszy) / pierwszy) * 100 if pierwszy > 0 else 0
-        trend_text = f"{procentowa_zmiana:+.1f}%"
-        trend_color = "#00f2fe" if procentowa_zmiana >= 0 else "#fe0979"
-    else:
-        trend_text = "Brak danych"
-        trend_color = "white"
         
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
-    # Supabase
     db_message = ""
     try:
         db_url = os.environ.get("SUPABASE_URL")
@@ -133,7 +108,6 @@ def update_dashboard(n1, n2, target_profile, platform):
     except Exception as e:
         db_message = f"(Błąd zapisu DB: {e})"
         
-    # Metryki i wykresy
     metrics_html = [
         html.Div(className='text-center', children=[
             html.H4(["Średnie zaangażowanie ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
@@ -156,7 +130,6 @@ def update_dashboard(n1, n2, target_profile, platform):
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
-    # Czyste dane do pamięci przeglądarki na potrzeby PDF
     stored_data = {
         "profile": target_profile,
         "platform": platform,
@@ -165,20 +138,8 @@ def update_dashboard(n1, n2, target_profile, platform):
         "vscore": v_score
     }
     
-    # Zwracamy wszystkie 9 elementów zgodnie z Output
-    return (
-        metrics_html, 
-        fig, 
-        {'display': 'block'}, 
-        "", 
-        db_message, 
-        stored_data, 
-        {'display': 'inline-block'},
-        trend_text, 
-        {'color': trend_color}
-    )
+    return metrics_html, fig, {'display': 'block'}, "", db_message, stored_data, {'display': 'inline-block'}
 
-# CALLBACK 2: Generowanie raportu PDF (po kliknięciu POBIERZ)
 @app.callback(
     Output("download-dataframe-pdf", "data"),
     Input("btn-download-pdf", "n_clicks"),
@@ -186,9 +147,7 @@ def update_dashboard(n1, n2, target_profile, platform):
     prevent_initial_call=True
 )
 def generate_pdf(n_clicks, stored_data):
-    print(f"DEBUG: Stored data to PDF: {stored_data}") 
     if not stored_data:
-        print("DEBUG: Brak danych w store!")
         return dash.no_update
 
     def clean(text):
