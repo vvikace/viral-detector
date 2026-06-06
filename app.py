@@ -43,8 +43,6 @@ app.layout = get_app_layout()
 # 2. Logika
 @app.callback(
     [Output('metrics-output', 'children'),
-     Output('trend-output', 'children'), 
-     Output('trend-output', 'style'),
      Output('engagement-graph', 'figure'),
      Output('engagement-graph', 'style'),
      Output('error-message', 'children'),
@@ -142,10 +140,6 @@ def update_dashboard(n1, n2, target_profile, platform):
             html.H4(["V-Score ", html.Span("ℹ️", id="tooltip-vscore", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Wskaźnik wiralności. Wynik powyżej 1.5x oznacza wykrycie viralu!", target="tooltip-vscore", placement="top"),
             html.H2(f"{v_score:.2f}x", style={'color': '#fe0979' if v_score > 1.5 else '#00f2fe'})
-        ]),
-        html.Div(className='text-center', children=[
-            html.H4("Dynamika (trend)"),
-            html.H2(f"{symbol} {trend_text}", style={'color': kolor})
         ])
     ]
     
