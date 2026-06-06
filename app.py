@@ -7,9 +7,27 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 from fpdf import FPDF
-import datetime
+import threading
+import time
+from update_db import run_update 
+from datetime import datetime
 
-# Importujemy komponenty z naszych własnych plików
+def bot_loop():
+    while True:
+        try:
+            print("Bot: Rozpoczynam aktualizację...")
+            run_update()
+            print("Bot: Aktualizacja zakończona. Śpię godzinę.")
+        except Exception as e:
+            print(f"Bot: Błąd w trakcie aktualizacji: {e}")
+        time.sleep(3600) 
+
+# Bota w tle przy starcie aplikacji
+thread = threading.Thread(target=bot_loop, daemon=True)
+thread.start()
+# ----------------------------
+
+# Import komponentów z własnych plików
 from layout import get_app_layout
 from api_scraper import get_instagram_posts, get_tiktok_posts
 
