@@ -5,49 +5,46 @@ import os
 
 def get_instagram_posts(target_profile):
     rapidapi_key = os.environ.get("RAPIDAPI_KEY")
-    rapidapi_host = os.environ.get("RAPIDAPI_HOST")
+    rapidapi_host = "instagram-scraper21.p.rapidapi.com" 
     
-    if not rapidapi_key or not rapidapi_host:
-        return [], "Brak kluczy API dla Instagrama na serwerze."
+    if not rapidapi_key:
+        return [], "Brak klucza API dla Instagrama."
 
-    url = f"https://{rapidapi_host}/get_ig_user_posts.php"
-    payload = {"username_or_url": target_profile, "amount": 10}
+    url = f"https://{rapidapi_host}/api/v1/user/posts"
+    
+    querystring = {"username": target_profile, "count": "10"}
+    
     headers = {
-        "X-RapidAPI-Key": rapidapi_key,
-        "X-RapidAPI-Host": rapidapi_host,
-        "Content-Type": "application/x-www-form-urlencoded"
+        "x-rapidapi-key": rapidapi_key,
+        "x-rapidapi-host": rapidapi_host
     }
     
     try:
-        response = requests.post(url, data=payload, headers=headers)
+        response = requests.get(url, headers=headers, params=querystring)
         data = response.json()
 
-        if "message" in data and "exceeded" in data.get("message", "").lower():
-            return [], "Wykorzystano darmowy limit zapytań API. Spróbuj TikToka."
+        print(f"DEBUG API RESPONSE: {data}")
+
+        items = data.get("data", {}).get("items", [])
         
-        items = data.get("posts", [])
         if not items:
-            items = data.get("data", {}).get("items", [])
-        if not items:
-            items = data.get("items", data.get("data", []))
+            return [], "Brak postów dla tego profilu."
 
         posts_data = []
         for item in items[:10]:
-            node = item.get("node", item) 
-            likes = node.get("like_count", 0)
-            comments = node.get("comment_count", 0)
-            timestamp = node.get("taken_at", node.get("timestamp", datetime.now().timestamp()))
+           
+            likes = item.get("like_count", 0)
+            comments = item.get("comment_count", 0)
             
-            try:
-                post_date = datetime.fromtimestamp(timestamp)
-            except:
-                post_date = datetime.now()
-                
+            timestamp = item.get("taken_at_timestamp", datetime.now().timestamp())
+            
             posts_data.append({
-                "date": post_date, 
+                "date": datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d'), 
                 "engagement": likes + comments
             })
+            
         return posts_data, ""
+        
     except Exception as e:
         return [], f"Błąd pobierania z Instagrama: {str(e)}"
 
