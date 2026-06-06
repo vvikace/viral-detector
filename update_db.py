@@ -4,7 +4,7 @@ from api_scraper import get_tiktok_posts
 import pandas as pd
 from datetime import datetime
 
-def run_update():
+def run_update(): 
     # 1. Połączenie
     supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
     
