@@ -4,7 +4,7 @@ def get_app_layout():
     return html.Div(style={'fontFamily': 'Arial, sans-serif', 'padding': '30px', 'maxWidth': '1000px', 'margin': '0 auto'}, children=[
         
         html.H1("🕵️‍♂️ Viral Detector", style={'textAlign': 'center', 'color': '#333'}),
-        html.P("Analiza wiralności profili na platformach TikTok oraz Instagram.", style={'textAlign': 'center', 'color': '#666'}),
+        html.P("Analiza viralności profili na platformach TikTok oraz Instagram.", style={'textAlign': 'center', 'color': '#666'}),
         
         # Panel wyszukiwania
         html.Div(style={'backgroundColor': '#f8f9fa', 'padding': '20px', 'borderRadius': '10px', 'display': 'flex', 'justifyContent': 'center', 'alignItems': 'center', 'gap': '15px', 'marginBottom': '30px', 'flexWrap': 'wrap'}, children=[
