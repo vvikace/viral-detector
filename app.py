@@ -48,15 +48,17 @@ app.layout = get_app_layout()
      Output('error-message', 'children'),
      Output('success-message', 'children'),
      Output('store-data', 'data'),
-     Output('btn-download-pdf', 'style')],
+     Output('btn-download-pdf', 'style'),
+     Output('trend-output', 'children'), 
+     Output('trend-output', 'style')],
     [Input('analyze-button', 'n_clicks'),
-     Input('btn-force-refresh', 'n_clicks')], # DODAJEMY DRUGI INPUT
+     Input('btn-force-refresh', 'n_clicks')],
     [State('profile-input', 'value'),
      State('platform-select', 'value')]
 )
 def update_dashboard(n1, n2, target_profile, platform):
     if not target_profile or (n1 == 0 and n2 == 0):
-        return metrics_html, trend_text, {'color': kolor}
+        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}, "", {'color': 'white'}
     
     # SPRAWDZAMY KTÓRY PRZYCISK KLIKNIĘTO
     trigger_id = ctx.triggered_id
