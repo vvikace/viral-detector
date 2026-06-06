@@ -7,6 +7,7 @@ import os
 from dotenv import load_dotenv
 from supabase import create_client
 from fpdf import FPDF
+import datetime
 
 # Importujemy komponenty z naszych własnych plików
 from layout import get_app_layout
