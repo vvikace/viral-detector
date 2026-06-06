@@ -1,4 +1,4 @@
-streamlit
+dash
 pandas
 yt-dlp
 plotly
