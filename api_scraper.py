@@ -12,17 +12,18 @@ def get_instagram_posts(target_profile):
 
     url = "https://instagram191.p.rapidapi.com/v2/user/posts/"
     
-    querystring = {"username": target_profile, "count": "10"}
+    querystring = {"user_id":"25025320","count":"12"}
     
     headers = {
-        "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": "instagram191.p.rapidapi.com"
+	"x-rapidapi-key": "f0095ca367msh620a2faa5e84fe1p1ecb81jsn53fa436172f1",
+	"x-rapidapi-host": "instagram191.p.rapidapi.com",
+	"Content-Type": "application/json"
     }
     
     try:
         response = requests.get(url, headers=headers, params=querystring)
         data = response.json()
-        print(f"DEBUG: Odpowiedź API: {data}")
+        print(response.json())
         return data, ""
     except Exception as e: 
         return [], f"Błąd pobierania: {str(e)}"
