@@ -23,10 +23,10 @@ def get_app_layout():
                         dcc.Input(id='profile-input', type='text', placeholder='np. wersow', className="form-control bg-dark text-white border-info")
                     ], md=4),
                     dbc.Col([
-                        html.Button('🔥 ANALIZUJ', id='analyze-button', n_clicks=0, className="btn btn-info w-100 fw-bold mt-4"),
+                        html.Button('ANALIZUJ', id='analyze-button', n_clicks=0, className="btn btn-info w-100 fw-bold mt-4"),
                     ], md=2),
                     dbc.Col([
-                        html.Button('🔄 ODŚWIEŻ', id='btn-force-refresh', n_clicks=0, className="btn btn-warning w-100 fw-bold mt-4"),
+                        html.Button('ODŚWIEŻ', id='btn-force-refresh', n_clicks=0, className="btn btn-warning w-100 fw-bold mt-4"),
                     ], md=3)
                 ], className="g-3 align-items-center")
             ])
