@@ -21,7 +21,11 @@ def run_update():
 
             if data:
                 # 4. Oblicz średnią i zapisz do tabeli historii
-                avg_eng = pd.DataFrame(data)["engagement"].mean()
+                df = pd.DataFrame(data)
+                avg_eng = df["engagement"].mean()
+                ostatni_post = df.iloc[0]["engagement"]
+                v_score = ostatni_post / avg_eng if avg_eng > 0 else 0
+                
                 entry = {
                     "profil": nazwa,
                     "platforma": platforma,
