@@ -85,6 +85,7 @@ def update_dashboard(n1, n2, target_profile, platform):
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        df['date'] = df['date'].dt.strftime('%m-%d %H:%M')
         
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
