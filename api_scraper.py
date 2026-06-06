@@ -10,7 +10,7 @@ def get_instagram_posts(target_profile):
     if not rapidapi_key:
         return [], "Brak klucza API dla Instagrama."
 
-    url = f"https://{rapidapi_host}/api/v1/user/posts"
+    url = f"instagram-scraper21.p.rapidapi.com"
     
     querystring = {"username": target_profile, "count": "10"}
     
