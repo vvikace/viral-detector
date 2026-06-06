@@ -71,7 +71,7 @@ def update_dashboard(n1, n2, target_profile, platform):
     else:
         # DANE Z BAZY (Szybkie)
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
-        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).order("timestamp", desc=True).limit(10).execute()
+        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).order("data", desc=True).limit(10).execute()
         
         # TU JEST KLUCZ: Uzupełniamy listę danymi z response.data
         posts_data = []
