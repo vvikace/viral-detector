@@ -11,7 +11,12 @@ def get_app_layout():
                 dbc.Row([
                     dbc.Col([
                         html.Label("Platforma", className="fw-bold text-info"),
-                        dcc.Dropdown(id='platform-select', options=[{'label': 'TikTok', 'value': 'Tiktok'}, {'label': 'Instagram', 'value': 'Instagram'}], value='Tiktok', clearable=False, className="text-dark")
+                        dcc.Dropdown(
+                            id='platform-select',
+                            options=[{'label': 'TikTok', 'value': 'Tiktok'}],
+                            value='Tiktok', # Domyślnie TikTok
+                            clearable=False
+                        )
                         ], md=3), # Zmniejszyłem szerokość
                     dbc.Col([
                         html.Label("Nazwa profilu", className="fw-bold text-info"),
