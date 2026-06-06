@@ -40,7 +40,7 @@ def get_app_layout():
             dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),
             html.Div(className='text-center', children=[
                 html.H4("Dynamika (10 ostatnich)"),
-                html.H2(trend_text, style={'color': trend_color})
+                html.H2(id='trend-output', children="0%"),
             ])
             # NOWE: Przycisk pobierania raportu (domyślnie ukryty)
             html.Div(
