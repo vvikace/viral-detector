@@ -172,7 +172,6 @@ def generate_pdf(n_clicks, stored_data):
     pdf.cell(200, 10, txt=clean(f"Data wygenerowania: {datetime.now().strftime('%Y-%m-%d %H:%M')}"), ln=True)
     pdf.cell(200, 10, txt=clean(f"Platforma: {stored_data['platform']}"), ln=True)
     pdf.cell(200, 10, txt=clean(f"Profil sledzony: @{stored_data['profile']}"), ln=True)
-    pdf.line(10, 45, 200, 45) 
     pdf.ln(5)
     
     pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (10 postow): {stored_data['avg']}"), ln=True)
