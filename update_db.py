@@ -2,6 +2,7 @@ import os
 from supabase import create_client
 from api_scraper import get_tiktok_posts
 import pandas as pd
+from datetime import datetime
 
 def run_update():
     # 1. Połączenie
@@ -25,6 +26,8 @@ def run_update():
                     "profil": nazwa,
                     "platforma": platforma,
                     "srednia": int(avg_eng),
+                    "ostatni_post": int(ostatni_post),
+                    "v_score": float(v_score),
                     "data": datetime.now().isoformat()
                 }
                 supabase.table("historia_analiz").insert(entry).execute()
