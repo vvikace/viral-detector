@@ -65,9 +65,8 @@ def update_dashboard(n1, n2, target_profile, platform):
     error_msg = ""
     
     if trigger_id == 'btn-force-refresh':
-        # ŚWIEŻE DANE Z SIECI
-        if platform == "Instagram": posts_data, error_msg = get_instagram_posts(target_profile)
-        else: posts_data, error_msg = get_tiktok_posts(target_profile)
+        # ŚWIEŻE DANE Z SIECI - zawsze TikTok
+        posts_data, error_msg = get_tiktok_posts(target_profile)
     else:
         # DANE Z BAZY (Szybkie)
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
