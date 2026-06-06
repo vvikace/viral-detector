@@ -27,7 +27,9 @@ app.layout = get_app_layout()
      Output('engagement-graph', 'figure'),
      Output('engagement-graph', 'style'),
      Output('error-message', 'children'),
-     Output('success-message', 'children')],
+     Output('success-message', 'children'),
+     Output('store-data', 'data'),           
+     Output('btn-download-pdf', 'style')],   
     [Input('analyze-button', 'n_clicks')],
     [State('profile-input', 'value'),
      State('platform-select', 'value')]
