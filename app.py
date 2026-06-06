@@ -91,6 +91,16 @@ def update_dashboard(n1, n2, target_profile, platform):
         
     # Obliczenia analityczne vscore
     df = pd.DataFrame(posts_data)
+    if len(df) >= 2:
+        pierwszy = df.iloc[-1]["engagement"]  # Najstarszy w bazie (z listy 10)
+        ostatni = df.iloc[0]["engagement"]    # Najnowszy
+        
+        procentowa_zmiana = ((ostatni - pierwszy) / pierwszy) * 100
+        trend_text = f"{procentowa_zmiana:+.1f}%"
+        trend_color = "#00f2fe" if procentowa_zmiana >= 0 else "#fe0979"
+    else:
+        trend_text = "Brak danych do trendu"
+        trend_color = "white"
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
