@@ -68,8 +68,8 @@ def update_dashboard(n1, n2, target_profile, platform):
     if error_msg:
             return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
         
-        if not posts_data:
-            return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych.", "", None, {'display': 'none'}
+    if not posts_data:
+        return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych.", "", None, {'display': 'none'}
         
     # Obliczenia analityczne vscore
     df = pd.DataFrame(posts_data)
