@@ -127,10 +127,12 @@ def update_dashboard(n1, n2, target_profile, platform):
         ])
     ]
     
-    fig = px.bar(df, x=df.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"])
+    df_plot = df.iloc[::-1].reset_index(drop=True)
+
+    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"])
     
-    if 'date_label' in df.columns:
-        fig.update_xaxes(tickvals=df.index, ticktext=df['date_label'], title="Data")
+    if 'date_label' in df_plot.columns:
+        fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
         
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
