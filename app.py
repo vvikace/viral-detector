@@ -1,214 +1,118 @@
-import random
-import requests
-import streamlit as st
-import pandas as pd
+import dash
+from dash import dcc, html, Input, Output, State
 import plotly.express as px
+import pandas as pd
 import yt_dlp
 from datetime import datetime
-from fpdf import FPDF
-import io
-from supabase import create_client, Client
+import os
+from dotenv import load_dotenv
+from supabase import create_client
 
-# 1. Konfiguracja strony
-st.set_page_config(page_title="Viral detector", layout="wide")
-st.title("🕵️‍♂️ Viral Detector")
+# Wczytanie haseł z pliku .env
+load_dotenv()
 
-# 2. Sidebar
-platform = st.sidebar.selectbox("Wybierz platformę:", ["Tiktok"])
-target_profile = st.sidebar.text_input("Wpisz nazwę profilu (np. wersow):", "")
-analyze_button = st.sidebar.button("Analizuj profil")
+# 1. Inicjalizacja aplikacji
+app = dash.Dash(__name__)
+server = app.server 
+app.title = "Viral Detector"
 
-if analyze_button and target_profile:
-    with st.spinner(f'Pobieranie danych z platformy {platform}...'):
+# 2. LAYOUT (Wygląd strony)
+app.layout = html.Div(style={'fontFamily': 'Arial, sans-serif', 'padding': '30px', 'maxWidth': '1000px', 'margin': '0 auto'}, children=[
+    
+    html.H1("🕵️‍♂️ Viral Detector", style={'textAlign': 'center', 'color': '#333'}),
+    html.P("Analiza wiralności profili na platformie TikTok.", style={'textAlign': 'center', 'color': '#666'}),
+    
+    # Panel wyszukiwania
+    html.Div(style={'backgroundColor': '#f8f9fa', 'padding': '20px', 'borderRadius': '10px', 'textAlign': 'center', 'marginBottom': '30px'}, children=[
+        html.Label("Nazwa profilu: ", style={'fontWeight': 'bold', 'marginRight': '10px'}),
+        dcc.Input(id='profile-input', type='text', placeholder='np. wersow', style={'padding': '8px', 'width': '200px', 'borderRadius': '5px', 'border': '1px solid #ccc'}),
+        html.Button('Analizuj', id='analyze-button', n_clicks=0, style={'padding': '8px 20px', 'marginLeft': '10px', 'backgroundColor': '#000000', 'color': 'white', 'border': 'none', 'borderRadius': '5px', 'cursor': 'pointer'})
+    ]),
+    
+    html.Div(id='error-message', style={'color': 'red', 'fontWeight': 'bold', 'textAlign': 'center'}),
+    html.Div(id='success-message', style={'color': 'green', 'fontWeight': 'bold', 'textAlign': 'center'}),
+    
+    # Animacja ładowania i wyniki
+    dcc.Loading(
+        id="loading",
+        type="circle",
+        color="#000000",
+        children=[
+            # Metryki
+            html.Div(id='metrics-output', style={'display': 'flex', 'justifyContent': 'space-around', 'marginTop': '30px'}),
+            # Wykres
+            dcc.Graph(id='engagement-graph', style={'display': 'none', 'marginTop': '30px'})
+        ]
+    )
+])
+
+# 3. CALLBACKS (Logika aplikacji)
+@app.callback(
+    [Output('metrics-output', 'children'),
+     Output('engagement-graph', 'figure'),
+     Output('engagement-graph', 'style'),
+     Output('error-message', 'children'),
+     Output('success-message', 'children')],
+    [Input('analyze-button', 'n_clicks')],
+    [State('profile-input', 'value')]
+)
+def update_dashboard(n_clicks, target_profile):
+    if n_clicks == 0 or not target_profile:
+        return "", {}, {'display': 'none'}, "", ""
+    
+    posts_data = []
+    
+    try:
+        # Pobieranie danych (TikTok)
+        ydl_opts = {'skip_download': True, 'playlist_items': '1-10', 'quiet': True, 'extract_flat': False}
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(f"https://www.tiktok.com/@{target_profile}", download=False)
+            for entry in info.get('entries', []):
+                if not entry: continue
+                likes = entry.get('like_count') or 0
+                comments = entry.get('comment_count') or 0
+                date_str = entry.get('upload_date')
+                dt = datetime.strptime(date_str, '%Y%m%d') if date_str else datetime.now()
+                posts_data.append({"date": dt, "engagement": likes + comments})
+                
+        if not posts_data:
+            return "", {}, {'display': 'none'}, f"Nie udało się pobrać danych dla @{target_profile}.", ""
+            
+        # Obliczenia
+        df = pd.DataFrame(posts_data)
+        avg_engagement = df["engagement"].mean()
+        latest_post = df.iloc[0]
+        v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
+        
+        # Zapis do Supabase
+        db_message = ""
         try:
-            posts_data = []
-            avg_engagement = 0
-            v_score = 0
-            latest_post = {"engagement": 0, "url": ""}
-            
-            
-            if platform == "Tiktok":
-                ydl_opts = {
-                    'skip_download': True,
-                    'playlist_items': '1-10',
-                    'quiet': True,
-                    'extract_flat': False
-                }
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(f"https://www.tiktok.com/@{target_profile}", download=False)
-                    for entry in info.get('entries', []):
-                        
-                        posts_data.append({
-                            "date": dt,
-                            "likes": likes,
-                            "comments": comments,
-                            "engagement": likes + comments,
-                            "url": entry.get('webpage_url', '')
-                        })
-            
-            if not posts_data: 
-                st.error("Nie udało się pobrać danych lub profil jest pusty.")
-                st.write("Debugowanie: Sprawdź czy API zwróciło jakikolwiek wynik:")
-                # To wyświetli Ci, co dokładnie przyszło z serwera, zamiast pustej listy
-                st.write(data) 
-            else:
-                df = pd.DataFrame(posts_data)
-
-                avg_engagement = df["engagement"].mean()
-                latest_post = df.iloc[0]
-                v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
-                
-                # Średnia z postów 1-10
-                avg_engagement = df["engagement"].mean()
-                
-                # Najnowszy post (indeks 0)
-                latest_post = df.iloc[0]
-                v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
-
-                # --- ZAPIS DO BAZY SUPABASE ---
-                try:
-                    url = st.secrets["SUPABASE_URL"]
-                    key = st.secrets["SUPABASE_KEY"]
-                    supabase = create_client(url, key)
-
-                    data_to_save = {
-                        "profil": target_profile,
-                        "platforma": platform,
-                        "srednia": int(avg_engagement),
-                        "ostatni_post": int(latest_post["engagement"]),
-                        "v_score": float(v_score)
-                    }
-    
-                    supabase.table("historia_analiz").insert(data_to_save).execute()
-                    st.success("Dane zapisane w bazie!")
-                except Exception as e:
-                    st.error(f"Błąd zapisu: {e}")
-
-# 4. Wyświetlanie wyników
-# Te linie muszą być na tym samym poziomie wcięć co słowo 'try' powyżej
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Średnie zaangażowanie", int(avg_engagement))
-                col2.metric("Ostatni post", int(latest_post["engagement"]))
-
-# Wskaźnik viralu
-                delta_color = "normal" if v_score < 1.2 else "inverse"
-                col3.metric("V-Score (Wiralność)", f"{v_score:.2f}x", delta=f"{int((v_score-1)*100)}%", delta_color=delta_color)
-
-                # 5. Alerty
-                if v_score > 1.5:
-                    st.error(f"🚨 ALERT: Wykryto Viral! Wynik jest o {int((v_score-1)*100)}% lepszy niż średnia.")
-                    st.write(f"Link do posta: {latest_post['url']}")
-                else:
-                    st.success("Posty są w normie. Brak anomalii viralowych.")
-
-                # Wykres
-                    st.subheader("Porównanie ostatnich postów")
-                    fig = px.bar(df, x="date", y="engagement", title="Zaangażowanie pod ostatnimi 10 postami")
-                    fig.add_hline(y=avg_engagement, line_dash="dash", line_color="red", annotation_text="Średnia")
-                    st.plotly_chart(fig, use_container_width=True)
-
-                # 7. Raport
-                    st.subheader("Opcje raportowania")
-                
-                    report_text = f"""RAPORT ANALIZY KONKURENCJI
-Data wygenerowania: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-Profil śledzony: @{target_profile}
---------------------------------------------------
-STATYSTYKI OGÓLNE:
-Średnie zaangażowanie (10 postów): {int(avg_engagement)}
-Ostatnie zaangażowanie: {int(latest_post['engagement'])}
-Wskaźnik V-Score: {v_score:.2f}x
-
-WNIOSEK:
-{"WYKRYTO VIRAL! Post rośnie znacznie szybciej niż zwykle." if v_score > 1.5 else "Brak anomalii. Wzrost stabilny."}
-
-LINK DO OSTATNIEGO POSTA:
-{latest_post['url']}
---------------------------------------------------
-Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro
-"""
-
-                    st.download_button(
-                        label="Pobierz raport tekstowy (.txt)",
-                        data=report_text,
-                        file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.txt",
-                        mime="text/plain"
-                    )
-
-                # Eksport danych do CSV
-                    csv = df.to_csv(index=False).encode('utf-8')
-                    st.download_button(
-                        label="Pobierz surowe dane (.csv)",
-                        data=csv,
-                        file_name=f"dane_{target_profile}.csv",
-                        mime="text/csv"
-                    )
-
-                # --- Funkcja do PDF ---
-                    def generate_pdf():
-                        def clean(text):
-                            text = str(text)
-                            replacements = {
-                                'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
-                                'Ą':'A', 'Ć':'C', 'Ę':'E', 'Ł':'L', 'Ń':'N', 'Ó':'O', 'Ś':'S', 'Ź':'Z', 'Ż':'Z'
-                            }
-                            for pl, asc in replacements.items():
-                                text = text.replace(pl, asc)
-                            return text
-
-                        pdf = FPDF()
-                        pdf.add_page()
-                    
-                    # Tytuł
-                        pdf.set_font("Arial", 'B', 16)
-                        pdf.cell(200, 10, txt=clean("RAPORT ANALIZY KONKURENCJI"), ln=True, align='C')
-                    
-                    # Dane podstawowe
-                        pdf.set_font("Arial", size=12)
-                        pdf.ln(10)
-                        pdf.cell(200, 10, txt=clean(f"Data wygenerowania: {datetime.now().strftime('%Y-%m-%d %H:%M')}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Platforma: {platform}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Profil sledzony: @{target_profile}"), ln=True)
-                        pdf.line(10, 50, 200, 50) 
-                        pdf.ln(5)
-                    
-                    # Wyniki
-                        pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (10 postow): {int(avg_engagement)}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Ostatnie zaangazowanie: {int(latest_post['engagement'])}"), ln=True)
-                        pdf.cell(200, 10, txt=clean(f"Wskaznik V-Score: {v_score:.2f}x"), ln=True)
-                    
-                    # Wniosek i alerty
-                        pdf.ln(5)
-                        pdf.set_font("Arial", 'B', 12)
-                        if v_score > 1.5:
-                            pdf.set_text_color(220, 53, 69) 
-                            pdf.cell(200, 10, txt=clean("WYKRYTO VIRAL! Post rosnie znacznie szybciej niz zwykle."), ln=True)
-                        else:
-                            pdf.set_text_color(40, 167, 69) 
-                            pdf.cell(200, 10, txt=clean("Brak anomalii. Wzrost stabilny."), ln=True)
-                    
-                        pdf.set_text_color(0, 0, 0)
-                        pdf.set_font("Arial", size=10)
-                        pdf.cell(200, 10, txt=clean(f"Link do posta: {latest_post['url']}"), ln=True)
-    
-                    # Stopka
-                        pdf.ln(10)
-                        pdf.set_font("Arial", 'I', size=8)
-                        pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
-                    
-                        return pdf.output(dest='S').encode('latin-1', 'replace')
-
-                # Eksport do pdf
-                    pdf_data = generate_pdf()
-                    st.download_button(
-                        label="📄 Pobierz raport w PDF",
-                        data=pdf_data,
-                        file_name=f"raport_{target_profile}_{datetime.now().strftime('%Y%m%d')}.pdf",
-                        mime="application/pdf"
-                    )
-
+            url = os.environ.get("SUPABASE_URL")
+            key = os.environ.get("SUPABASE_KEY")
+            if url and key:
+                supabase = create_client(url, key)
+                data_to_save = {"profil": target_profile, "platforma": "Tiktok", "srednia": int(avg_engagement), "ostatni_post": int(latest_post["engagement"]), "v_score": float(v_score)}
+                supabase.table("historia_analiz").insert(data_to_save).execute()
+                db_message = "Zapisano w bazie!"
         except Exception as e:
-            st.error(f"Błąd: {e}. Upewnij się, że profil jest publiczny i wpisano poprawną nazwę.")
+            db_message = f"(Błąd zapisu DB: {e})"
+        
+        # Budowanie wyglądu metryk (HTML)
+        metrics_html = [
+            html.Div(style={'textAlign': 'center'}, children=[html.H4("Średnie zaangażowanie"), html.H2(f"{int(avg_engagement):,}")]),
+            html.Div(style={'textAlign': 'center'}, children=[html.H4("Ostatni post"), html.H2(f"{int(latest_post['engagement']):,}")]),
+            html.Div(style={'textAlign': 'center'}, children=[html.H4("V-Score"), html.H2(f"{v_score:.2f}x", style={'color': 'red' if v_score > 1.5 else 'green'})])
+        ]
+        
+        # Budowanie wykresu
+        fig = px.bar(df, x="date", y="engagement", title=f"Zaangażowanie pod ostatnimi 10 postami (@{target_profile})")
+        fig.add_hline(y=avg_engagement, line_dash="dash", line_color="red", annotation_text="Średnia")
+        
+        return metrics_html, fig, {'display': 'block'}, "", db_message
 
-else: 
-    st.info("Wpisz nazwę publicznego profilu w panelu bocznym i kliknij przycisk, aby rozpocząć automatyczną analizę.")
+    except Exception as e:
+        return "", {}, {'display': 'none'}, f"Wystąpił błąd: {str(e)}", ""
+
+# 4. Start serwera
+if __name__ == '__main__':
+    app.run_server(debug=True)
