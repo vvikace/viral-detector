@@ -45,7 +45,6 @@ def get_app_layout():
             className="text-center"
         ),
         
-        # Komponenty techniczne na samym dole Container
         dcc.Download(id="download-dataframe-pdf"),
         dcc.Store(id='store-data')
         
