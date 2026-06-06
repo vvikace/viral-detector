@@ -15,7 +15,7 @@ def get_app_layout():
                 'WebkitTextFillColor': 'transparent'
             }
         ),
-        html.P("Monitoruj zasięgi. Wykrywaj anomalie.", className="text-center text-muted mb-5"),
+        html.P("Monitoruj zasięgi. Wyłapuj odchylenia.", className="text-center text-muted mb-5"),
         
         # Ciemny panel wyszukiwania
         dbc.Card([
