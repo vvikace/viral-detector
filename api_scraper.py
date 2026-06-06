@@ -5,7 +5,7 @@ import os
 
 def get_instagram_posts(target_profile):
     rapidapi_key = os.environ.get("RAPIDAPI_KEY")
-    rapidapi_host = "instagram-scraper21.p.rapidapi.com" 
+    rapidapi_host = "https://instagram-scraper21.p.rapidapi.com/api/v1/post-info" 
     
     if not rapidapi_key:
         return [], "Brak klucza API dla Instagrama."
