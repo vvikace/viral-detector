@@ -1,4 +1,5 @@
 import dash
+import dash_bootstrap_components as dbc
 from dash import Input, Output, State, html
 import plotly.express as px
 import pandas as pd
@@ -12,7 +13,7 @@ from api_scraper import get_instagram_posts, get_tiktok_posts
 
 load_dotenv()
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.CYBORG])
 server = app.server
 app.title = "Viral Detector"
 
@@ -81,8 +82,20 @@ def update_dashboard(n_clicks, target_profile, platform):
         html.Div(style={'textAlign': 'center'}, children=[html.H4("V-Score"), html.H2(f"{v_score:.2f}x", style={'color': 'red' if v_score > 1.5 else 'green'})])
     ]
     
-    fig = px.bar(df, x="date", y="engagement", title=f"Zaangażowanie pod ostatnimi 10 postami (@{target_profile} - {platform})")
-    fig.add_hline(y=avg_engagement, line_dash="dash", line_color="red", annotation_text="Średnia")
+    fig = px.bar(
+        df, 
+        x="date", 
+        y="engagement", 
+        title=f"Zaangażowanie: @{target_profile} ({platform})",
+        template="plotly_dark", # Ciemny motyw wykresu
+        color_discrete_sequence=["#00f2fe"] # Neonowy niebieski
+    )
+    
+    # Różowa, przerywana linia średniej
+    fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
+    
+    # Usunięcie tła wykresu, żeby wtopił się w stronę
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
     return metrics_html, fig, {'display': 'block'}, "", db_message
 
