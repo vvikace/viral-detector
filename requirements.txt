@@ -2,7 +2,6 @@ dash
 plotly
 pandas
 yt-dlp
-requests
 python-dotenv
 supabase
 gunicorn
