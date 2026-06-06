@@ -14,10 +14,10 @@ def get_app_layout():
                         dcc.Dropdown(
                             id='platform-select',
                             options=[{'label': 'TikTok', 'value': 'Tiktok'}],
-                            value='Tiktok', # Domyślnie TikTok
+                            value='Tiktok', 
                             clearable=False
                         )
-                        ], md=3), # Zmniejszyłem szerokość
+                        ], md=3), 
                     dbc.Col([
                         html.Label("Nazwa profilu", className="fw-bold text-info"),
                         dcc.Input(id='profile-input', type='text', placeholder='np. wersow', className="form-control bg-dark text-white border-info")
@@ -38,7 +38,10 @@ def get_app_layout():
         dcc.Loading(id="loading", type="cube", color="#00f2fe", children=[
             html.Div(id='metrics-output', className="d-flex justify-content-around mt-4"),
             dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),
-            
+            html.Div(className='text-center', children=[
+                html.H4("Dynamika (10 ostatnich)"),
+                html.H2(trend_text, style={'color': trend_color})
+            ])
             # NOWE: Przycisk pobierania raportu (domyślnie ukryty)
             html.Div(
                 dbc.Button("📄 POBIERZ RAPORT PDF", id="btn-download-pdf", color="danger", className="mt-4 fw-bold", style={'display': 'none'}),
