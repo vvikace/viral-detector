@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;900&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif !important;
+    background-color: #050505 !important;
+}
+
+h1 {
+    letter-spacing: 2px;
+}
+
+.card {
+    border-radius: 15px !important;
+}
+
+.btn {
+    border-radius: 8px !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.3s ease !important;
+}
+
+.btn-info:hover {
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.7) !important;
+    transform: scale(1.02);
+}
