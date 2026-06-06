@@ -1,6 +1,6 @@
 import os
 from supabase import create_client
-from api_scraper import get_tiktok_posts, get_instagram_posts
+from api_scraper import get_tiktok_posts
 import pandas as pd
 
 def run_update():
@@ -17,20 +17,20 @@ def run_update():
         # 3. Pobierz dane
         if platforma == "Tiktok":
             data, _ = get_tiktok_posts(nazwa)
+
+            if data:
+                # 4. Oblicz średnią i zapisz do tabeli historii
+                avg_eng = pd.DataFrame(data)["engagement"].mean()
+                entry = {
+                    "profil": nazwa,
+                    "platforma": platforma,
+                    "srednia": int(avg_eng),
+                    "data": datetime.now().isoformat()
+                }
+                supabase.table("historia_analiz").insert(entry).execute()
+                print(f"Zaktualizowano: {nazwa}")
         else:
-            data, _ = get_instagram_posts(nazwa)
-            
-        if data:
-            # 4. Oblicz średnią i zapisz do tabeli historii
-            avg_eng = pd.DataFrame(data)["engagement"].mean()
-            entry = {
-                "profil": nazwa,
-                "platforma": platforma,
-                "srednia": int(avg_eng),
-                "data": datetime.now().isoformat()
-            }
-            supabase.table("historia_analiz").insert(entry).execute()
-            print(f"Zaktualizowano: {nazwa}")
+            print(f"Pomijam {platforma} dla profilu {nazwa}")
 
 if __name__ == "__main__":
     run_update()
