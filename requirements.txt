@@ -7,3 +7,4 @@ python-dotenv
 supabase
 gunicorn
 dash-bootstrap-components
+fpdf
