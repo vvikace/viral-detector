@@ -1,7 +1,8 @@
 dash
-pandas
 plotly
+pandas
 yt-dlp
-supabase
+requests
 python-dotenv
+supabase
 gunicorn
