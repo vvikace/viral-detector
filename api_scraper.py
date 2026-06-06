@@ -3,30 +3,6 @@ import requests
 from datetime import datetime
 import os
 
-def get_instagram_posts(target_profile):
-    rapidapi_key = os.environ.get("RAPIDAPI_KEY")
-    rapidapi_host = "instagram191.p.rapidapi.com/v2/user/posts/" 
-    
-    if not rapidapi_key:
-        return [], "Brak klucza API dla Instagrama."
-
-    url = "https://instagram191.p.rapidapi.com/v2/user/posts/"
-    
-    querystring = {"user_id":"25025320","count":"12"}
-    
-    headers = {
-	"x-rapidapi-key": "f0095ca367msh620a2faa5e84fe1p1ecb81jsn53fa436172f1",
-	"x-rapidapi-host": "instagram191.p.rapidapi.com",
-	"Content-Type": "application/json"
-    }
-    
-    try:
-        response = requests.get(url, headers=headers, params=querystring)
-        data = response.json()
-        print(response.json())
-        return data, ""
-    except Exception as e: 
-        return [], f"Błąd pobierania: {str(e)}"
 
 def get_tiktok_posts(target_profile):
     posts_data = []
