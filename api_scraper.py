@@ -10,20 +10,22 @@ def get_instagram_posts(target_profile):
     if not rapidapi_key:
         return [], "Brak klucza API dla Instagrama."
 
-    url = f"https://{rapidapi_host}/api/v1/user/posts"
+    url = "https://instagram-scraper21.p.rapidapi.com/api/v1/user/posts"
     
     querystring = {"username": target_profile, "count": "10"}
     
     headers = {
         "x-rapidapi-key": rapidapi_key,
-        "x-rapidapi-host": rapidapi_host
+        "x-rapidapi-host": "instagram-scraper21.p.rapidapi.com"
     }
     
     try:
         response = requests.get(url, headers=headers, params=querystring)
         data = response.json()
         
-        print(f"DEBUG: Klucze w odpowiedzi API: {data.keys()}") 
+        print(f"DEBUG: Odpowiedź API: {data}")
+    
+    return data, "" 
         
         items = data.get("items", []) 
         
