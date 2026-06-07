@@ -102,7 +102,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
                     "miniaturka": latest_scraped.get("thumbnail", "")
                 }
                 supabase.table("historia_analiz").insert(data_to_save).execute()
-                db_message = "Zaktualizowano profil!"
+                db_message = "Zapisano w bazie!"
             except Exception as e:
                 db_message = f"(Błąd zapisu nowej historii: {e})"
 
