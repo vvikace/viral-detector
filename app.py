@@ -53,24 +53,53 @@ app.layout = get_app_layout()
      State('platform-select', 'value')]
 )
 def update_dashboard(n1, n2, history_mode, target_profile, platform):
-    if not target_profile or (n1 == 0 and n2 == 0):
+    if not target_profile or (n1 == 0 and n2 == 0 and ctx.triggered_id is None):
         return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}
     
     trigger_id = ctx.triggered_id
+    supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
     posts_data = []
     error_msg = ""
+    db_message = ""
     
+    # ŚCIEŻKA A: KLIKNIĘTO "ODŚWIEŻ" (Pobieranie 10 najnowszych z sieci + ewentualne 90 z bazy)
     if trigger_id == 'btn-force-refresh':
         if platform.lower() == 'tiktok':
             posts_data, error_msg = get_tiktok_posts(target_profile)
         else:
             posts_data, error_msg = get_youtube_posts(target_profile)
-        if posts_data and history_mode == 'long':
-            supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
-            historia = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(100).execute()
             
+        if error_msg:
+            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
+            
+        if posts_data:
+            try:
+                df_scraped = pd.DataFrame(posts_data)
+                avg_scraped = df_scraped["engagement"].mean()
+                latest_scraped = df_scraped.iloc[0]
+                v_score_scraped = latest_scraped["engagement"] / avg_scraped if avg_scraped > 0 else 0
+                
+                data_to_save = {
+                    "profil": target_profile, 
+                    "platforma": platform, 
+                    "srednia": int(avg_scraped), 
+                    "ostatni_post": int(latest_scraped["engagement"]), 
+                    "v_score": float(v_score_scraped),
+                    "url_posta": latest_scraped.get("url", "Brak linku"),
+                    "tytul": latest_scraped.get("title", "Brak tytułu"),
+                    "miniaturka": latest_scraped.get("thumbnail", "")
+                }
+                supabase.table("historia_analiz").insert(data_to_save).execute()
+                db_message = "Zaktualizowano profil!"
+            except Exception as e:
+                db_message = f"(Błąd zapisu nowej historii: {e})"
+
+        # Jeśli tryb to 'long', dociągamy DOKŁADNIE 90 archiwalnych wpisów z bazy, by dopełnić do 100
+        if posts_data and history_mode == 'long':
+            historia = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(90).execute()
             for item in historia.data:
-                if not any(d['url'] == item.get('url_posta') for d in posts_data):
+                # Blokada przed duplikowaniem nowo pobranego wpisu
+                if not any(d.get('url') == item.get('url_posta') for d in posts_data):
                     posts_data.append({
                         "date": item.get('data'), 
                         "engagement": item.get('ostatni_post', 0),
@@ -78,18 +107,12 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
                         "title": item.get('tytul', 'Brak tytułu'),
                         "thumbnail": item.get('miniaturka', '')
                     })
+                    
+    # ŚCIEŻKA B: ZWYKŁA ANALIZA LUB ZMIANA PRZEŁĄCZNIKA (Czytamy czyste dane z bazy: 10 lub 100)
     else:
-        supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
-        query = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True)
+        limit_val = 10 if history_mode == "short" else 100
+        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(limit_val).execute()
         
-        if history_mode == "short":
-            query = query.limit(10)
-        else:
-            query = query.limit(100)
-            
-        response = query.execute()
-        
-        posts_data = []
         for item in response.data:
             posts_data.append({
                 "date": item.get('data'), 
@@ -100,57 +123,48 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             })
             
         if not posts_data:
-            error_msg = f"Brak danych dla @{target_profile} na {platform}. Kliknij Odśwież."
-    
-    if error_msg:
-        return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
-    
+            return "", {}, {'display': 'none'}, f"Brak danych w bazie dla @{target_profile}. Kliknij Odśwież.", "", None, {'display': 'none'}
+        
+    # KROK wspólny dla obu ścieżek: Sortowanie chronologiczne i przygotowanie tabeli
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        # Sortujemy od najstarszego wpisu do najnowszego, aby linia trendu szła poprawnie od lewej do prawej
         df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
         df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
     avg_engagement = df["engagement"].mean()
-    latest_post = df.iloc[0]
+    latest_post = df.iloc[-1] # Najnowszy rekord po sortowaniu chronologicznym jest na końcu listy
     
     latest_url = latest_post.get("url", "Brak linku")
     latest_title = latest_post.get("title", "Brak tytułu")
     latest_thumb = latest_post.get("thumbnail", "")
-    
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
-    db_message = ""
-    try:
-        db_url = os.environ.get("SUPABASE_URL")
-        db_key = os.environ.get("SUPABASE_KEY")
-        if db_url and db_key and trigger_id == 'btn-force-refresh':
-            supabase = create_client(db_url, db_key)
-            data_to_save = {
-                "profil": target_profile, 
-                "platforma": platform, 
-                "srednia": int(avg_engagement), 
-                "ostatni_post": int(latest_post["engagement"]), 
-                "v_score": float(v_score),
-                "url_posta": latest_url,
-                "tytul": latest_title,
-                "miniaturka": latest_thumb
-            }
-            supabase.table("historia_analiz").insert(data_to_save).execute()
-            db_message = "Zapisano w bazie!"
-    except Exception as e:
-        db_message = f"(Błąd zapisu DB: {e})"
-        
+    # Wizualna plakietka "VIRAL" nad miniaturką
+    badge = html.Div(
+        "🔥 VIRAL!",
+        style={
+            'position': 'absolute', 'top': '10px', 'right': '10px',
+            'backgroundColor': '#fe0979', 'color': 'white', 'padding': '5px 10px',
+            'borderRadius': '8px', 'fontWeight': 'bold', 'boxShadow': '0 0 15px rgba(254, 9, 121, 0.8)',
+            'zIndex': '10', 'fontSize': '0.85em', 'letterSpacing': '1px'
+        }
+    ) if v_score > 1.5 else None
+    
     metrics_html = [
         html.Div(className='metric-card text-center', children=[
-            html.H4(["Średnia 10 postów ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
-            dbc.Tooltip("Średnie zaangażowanie z ostatnich 10 publikacji.", target="tooltip-avg", placement="top"),
+            html.H4(["Średnia z okresu ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
+            dbc.Tooltip("Średnie zaangażowanie z widocznych publikacji.", target="tooltip-avg", placement="top"),
             html.H2(f"{int(avg_engagement):,}", className="mt-4")
         ]),
         
         html.Div(className='metric-card text-center', children=[
             html.H4("Najnowszy Post", className="mb-3"),
-            html.Img(src=latest_thumb, style={'height': '140px', 'width': '100%', 'objectFit': 'cover', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.2)'}) if latest_thumb else html.Div(),
+            html.Div(style={'position': 'relative', 'display': 'inline-block', 'width': '100%'}, children=[
+                html.Img(src=latest_thumb, style={'height': '140px', 'width': '100%', 'objectFit': 'cover', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.2)'}) if latest_thumb else html.Div(),
+                badge
+            ]),
             html.P(latest_title[:45] + "..." if len(latest_title) > 45 else latest_title, style={'fontSize': '0.85em', 'fontStyle': 'italic', 'color': '#aaa'}),
             html.H3(f"{int(latest_post['engagement']):,}"),
             html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="btn btn-outline-info btn-sm mt-2 w-100 fw-bold") if latest_url != "Brak linku" else html.Span()
@@ -163,21 +177,19 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         ])
     ]
     
-    df_plot = df.iloc[::-1].reset_index(drop=True)
-    if 'url' not in df_plot.columns: df_plot['url'] = "Brak linku"
-    if 'title' not in df_plot.columns: df_plot['title'] = "Brak tytułu"
-
-    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
+    # Tworzenie wykresu na czystych, chronologicznych danych
+    fig = px.bar(df, x=df.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
                  template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
     
-    if 'date_label' in df_plot.columns:
-        fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
+    if 'date_label' in df.columns:
+        fig.update_xaxes(tickvals=df.index, ticktext=df['date_label'], title="Data")
+        
     if history_mode == 'long' and len(df) > 5:
         df['trend'] = df['engagement'].rolling(window=5, min_periods=1).mean()
-        fig.add_scatter(x=df_plot.index, y=df_plot['trend'], mode='lines', name='Linia trendu',
-                        line=dict(color='#fe0979', width=4))
+        fig.add_scatter(x=df.index, y=df['trend'], mode='lines', name='Linia trendu', line=dict(color='#fe0979', width=4))
     else:
         fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
+        
     fig.update_traces(hovertemplate="<b>%{customdata[1]}</b><br><br><b>Wynik:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>", selector=dict(type='bar'))
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
     
@@ -245,7 +257,7 @@ def generate_pdf(n_clicks, stored_data):
     pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
     pdf.set_font("Arial", 'I', size=8)
-    pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
+    pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector"), ln=True)
     
     return dcc.send_bytes(pdf.output(dest='S').encode('latin-1', 'replace'), f"raport_{stored_data['profile']}.pdf")
 
