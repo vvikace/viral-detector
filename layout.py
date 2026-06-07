@@ -13,7 +13,10 @@ def get_app_layout():
                         html.Label("Platforma", className="fw-bold text-info"),
                         dcc.Dropdown(
                             id='platform-select',
-                            options=[{'label': 'TikTok', 'value': 'Tiktok'}],
+                            options=[
+                                {'label': 'TikTok', 'value': 'Tiktok'},
+                                {'label': 'YouTube Shorts', 'value': 'Youtube'}
+                            ],
                             value='Tiktok', 
                             clearable=False
                         )
