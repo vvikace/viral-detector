@@ -8,47 +8,39 @@ def get_app_layout():
         
         dbc.Card([
             dbc.CardBody([
-                dbc.Row([
-                    dbc.Col([
-                        html.Label("Platforma", className="fw-bold text-info"),
-                        dcc.Dropdown(
-                            id='platform-select',
-                            options=[
-                                {'label': 'TikTok', 'value': 'Tiktok'},
-                                {'label': 'YouTube Shorts', 'value': 'Youtube'}
-                            ],
-                            value='Tiktok', 
-                            clearable=False
-                        )
-                    ], md=3), 
-                    dbc.Col([
-                        html.Label("Nazwa profilu", className="fw-bold text-info"),
-                        dcc.Input(id='profile-input', type='text', placeholder='np. wersow', className="form-control bg-dark text-white border-info")
-                    ], md=4),
-                    dbc.Col([
-                        html.Button('ANALIZUJ', id='analyze-button', n_clicks=0, className="btn btn-info w-100 fw-bold mt-4"),
-                    ], md=2),
-                    dbc.Col([
-                        html.Button('ODŚWIEŻ', id='btn-force-refresh', n_clicks=0, className="btn btn-warning w-100 fw-bold mt-4"),
-                    ], md=3)
-                ], className="g-3 align-items-center")
+                dbc.InputGroup([
+                    dbc.Select(
+                        id='platform-select',
+                        options=[
+                            {'label': 'TikTok', 'value': 'Tiktok'},
+                            {'label': 'YouTube Shorts', 'value': 'Youtube'}
+                        ],
+                        value='Tiktok',
+                        className="bg-dark text-white border-info",
+                        style={'maxWidth': '200px', 'cursor': 'pointer'}
+                    ),
+                    dbc.InputGroupText("@", className="bg-dark text-info border-info fw-bold"),
+                    dbc.Input(id='profile-input', type='text', placeholder='np. wersow', className="bg-dark text-white border-info"),
+                    dbc.Button('ANALIZUJ', id='analyze-button', n_clicks=0, color="info", className="fw-bold"),
+                    dbc.Button('ODŚWIEŻ', id='btn-force-refresh', n_clicks=0, color="warning", className="fw-bold")
+                ], size="lg", className="shadow-sm")
             ])
-        ], className="border-info mb-4", style={'backgroundColor': '#111'}),
+        ], className="border-info mb-4 shadow", style={'backgroundColor': '#111', 'borderRadius': '15px'}),
         
         html.Div(id='error-message', className="text-danger text-center fw-bold mb-3"),
         html.Div(id='success-message', className="text-success text-center fw-bold mb-3"),
         
         dcc.Loading(id="loading", type="cube", color="#00f2fe", children=[
-            html.Div(id='metrics-output', className='d-flex justify-content-around mt-4'),
-            dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-4"),
+            html.Div(id='metrics-output', className='d-flex justify-content-between mt-4'),
+            dcc.Graph(id='engagement-graph', style={'display': 'none'}, className="mt-5"),
         ]),
         
         html.Div(
-            dbc.Button("📄 POBIERZ RAPORT PDF", id="btn-download-pdf", color="danger", className="mt-4 fw-bold", style={'display': 'none'}),
+            dbc.Button("📄 POBIERZ RAPORT PDF", id="btn-download-pdf", color="danger", className="mt-4 fw-bold shadow-lg", style={'display': 'none'}),
             className="text-center"
         ),
         
         dcc.Download(id="download-dataframe-pdf"),
         dcc.Store(id='store-data')
         
-    ], fluid=True, style={'maxWidth': '1000px'})
+    ], fluid=True, style={'maxWidth': '1100px'})
