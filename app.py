@@ -108,6 +108,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
         df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
     avg_engagement = df["engagement"].mean()
@@ -171,8 +172,8 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     
     if 'date_label' in df_plot.columns:
         fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
-    if history_mode == 'long' and len(df_plot) > 5:
-        df_plot['trend'] = df_plot['engagement'].rolling(window=3, min_periods=1).mean()
+    if history_mode == 'long' and len(df) > 5:
+        df['trend'] = df['engagement'].rolling(window=5, min_periods=1).mean()
         fig.add_scatter(x=df_plot.index, y=df_plot['trend'], mode='lines', name='Linia trendu',
                         line=dict(color='#fe0979', width=4))
     else:
