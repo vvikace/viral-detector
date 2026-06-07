@@ -1,6 +1,6 @@
 import os
 from supabase import create_client
-from api_scraper import get_tiktok_posts
+from api_scraper import get_tiktok_posts, get_youtube_posts
 import pandas as pd
 from datetime import datetime
 
@@ -15,37 +15,45 @@ def run_update():
     
     for p in profiles:
         nazwa = p['nazwa']
-        platforma = p['platforma']
+        platforma = p['platforma'].lower() # Wymuszamy małe litery
         
-        # 3. Pobierz dane
-        if platforma.lower() == "tiktok":
-            print(f"Bot: Pobieram posty z API dla profilu @{nazwa}...")
+        data = []
+        error_msg = ""
+        
+        # 3. Przekierowanie ruchu w zależności od platformy
+        if platforma == "tiktok":
+            print(f"Bot: Pobieram TikToki dla @{nazwa}...")
             data, error_msg = get_tiktok_posts(nazwa)
-            
-            if data:
-                # 4. Oblicz średnią i zapisz do tabeli historii
-                df = pd.DataFrame(data)
-                avg_eng = df["engagement"].mean()
-                ostatni_post = df.iloc[0]["engagement"]
-                url_posta = df.iloc[0]["url"]
-                v_score = ostatni_post / avg_eng if avg_eng > 0 else 0
-                
-                entry = {
-                    "profil": nazwa,
-                    "platforma": platforma,
-                    "srednia": int(avg_eng),
-                    "ostatni_post": int(ostatni_post),
-                    "v_score": float(v_score),
-                    "data": datetime.now().isoformat(),
-                    "url_posta": url_posta
-                }
-                
-                supabase.table("historia_analiz").insert(entry).execute()
-                print(f"Bot: SUKCES - Zaktualizowano dane dla @{nazwa} w bazie!")
-            else:
-                print(f"Bot: BŁĄD POBIERANIA - Nie mam danych dla @{nazwa}. Powód: {error_msg}")
+        elif platforma == "youtube":
+            print(f"Bot: Pobieram YouTube Shorts dla @{nazwa}...")
+            data, error_msg = get_youtube_posts(nazwa)
         else:
-            print(f"Bot: Pomijam platformę {platforma} dla profilu {nazwa}")
+            print(f"Bot: Pomijam nieznaną platformę '{platforma}' dla @{nazwa}")
+            continue
+            
+        if data:
+            # 4. Oblicz średnią i zapisz do tabeli historii
+            df = pd.DataFrame(data)
+            avg_eng = df["engagement"].mean()
+            ostatni_post = df.iloc[0]
+            v_score = ostatni_post["engagement"] / avg_eng if avg_eng > 0 else 0
+            
+            entry = {
+                "profil": nazwa,
+                "platforma": platforma.capitalize(), # Zapisujemy ładnie: Tiktok / Youtube
+                "srednia": int(avg_eng),
+                "ostatni_post": int(ostatni_post["engagement"]),
+                "v_score": float(v_score),
+                "data": datetime.now().isoformat(),
+                "url_posta": ostatni_post["url"],
+                "tytul": ostatni_post["title"],
+                "miniaturka": ostatni_post["thumbnail"]
+            }
+            
+            supabase.table("historia_analiz").insert(entry).execute()
+            print(f"Bot: SUKCES - Zaktualizowano dane dla @{nazwa} ({platforma})!")
+        else:
+            print(f"Bot: BŁĄD POBIERANIA - Nie mam danych dla @{nazwa}. Powód: {error_msg}")
 
 if __name__ == "__main__":
     run_update()
