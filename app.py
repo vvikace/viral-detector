@@ -28,7 +28,7 @@ thread.start()
 # ----------------------------
 
 from layout import get_app_layout
-from api_scraper import get_tiktok_posts
+from api_scraper import get_tiktok_posts, get_youtube_posts
 
 load_dotenv()
 
@@ -60,21 +60,26 @@ def update_dashboard(n1, n2, target_profile, platform):
     error_msg = ""
     
     if trigger_id == 'btn-force-refresh':
-        posts_data, error_msg = get_tiktok_posts(target_profile)
+        if platform.lower() == 'tiktok':
+            posts_data, error_msg = get_tiktok_posts(target_profile)
+        else:
+            posts_data, error_msg = get_youtube_posts(target_profile)
     else:
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
-        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).order("data", desc=True).limit(10).execute()
+        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(10).execute()
         
         posts_data = []
         for item in response.data:
             posts_data.append({
                 "date": item.get('data'), 
                 "engagement": item.get('ostatni_post', 0),
-                "url": item.get('url_posta', 'Brak linku')
+                "url": item.get('url_posta', 'Brak linku'),
+                "title": item.get('tytul', 'Brak tytułu'),
+                "thumbnail": item.get('miniaturka', '')
             })
             
         if not posts_data:
-            error_msg = "Brak danych w bazie. Kliknij Odśwież."
+            error_msg = f"Brak danych dla @{target_profile} na {platform}. Kliknij Odśwież."
     
     if error_msg:
         return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
@@ -89,21 +94,28 @@ def update_dashboard(n1, n2, target_profile, platform):
         
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
+    
     latest_url = latest_post.get("url", "Brak linku")
+    latest_title = latest_post.get("title", "Brak tytułu")
+    latest_thumb = latest_post.get("thumbnail", "")
+    
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
     db_message = ""
     try:
         db_url = os.environ.get("SUPABASE_URL")
         db_key = os.environ.get("SUPABASE_KEY")
-        if db_url and db_key:
+        if db_url and db_key and trigger_id == 'btn-force-refresh':
             supabase = create_client(db_url, db_key)
             data_to_save = {
                 "profil": target_profile, 
                 "platforma": platform, 
                 "srednia": int(avg_engagement), 
                 "ostatni_post": int(latest_post["engagement"]), 
-                "v_score": float(v_score)
+                "v_score": float(v_score),
+                "url_posta": latest_url,
+                "tytul": latest_title,
+                "miniaturka": latest_thumb
             }
             supabase.table("historia_analiz").insert(data_to_save).execute()
             db_message = "Zapisano w bazie!"
@@ -112,34 +124,35 @@ def update_dashboard(n1, n2, target_profile, platform):
         
     metrics_html = [
         html.Div(className='text-center', children=[
-            html.H4(["Średnie zaangażowanie ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
-            dbc.Tooltip("Średnia suma lajków i komentarzy z ostatnich 10 postów.", target="tooltip-avg", placement="top"),
+            html.H4(["Średnia 10 postów ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
+            dbc.Tooltip("Średnie zaangażowanie z ostatnich 10 publikacji.", target="tooltip-avg", placement="top"),
             html.H2(f"{int(avg_engagement):,}")
         ]),
         html.Div(className='text-center', children=[
-            html.H4(["Ostatni post ", html.Span("ℹ️", id="tooltip-latest", style={'cursor': 'help', 'fontSize': '0.8em'})]),
-            dbc.Tooltip("Liczba interakcji pod najnowszym opublikowanym materiałem.", target="tooltip-latest", placement="top"),
-            html.H2(f"{int(latest_post['engagement']):,}"),
-            html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="text-info", style={'textDecoration': 'none', 'fontWeight': 'bold'}) if latest_url != "Brak linku" else html.Span()
+            html.H4("Najnowszy Post", className="mb-3"),
+            html.Img(src=latest_thumb, style={'maxHeight': '150px', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.3)'}) if latest_thumb else html.Div(),
+            html.P(latest_title[:50] + "..." if len(latest_title) > 50 else latest_title, style={'fontSize': '0.9em', 'fontStyle': 'italic', 'color': '#ccc'}),
+            html.H3(f"Zaangażowanie: {int(latest_post['engagement']):,}"),
+            html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="btn btn-outline-info btn-sm mt-2") if latest_url != "Brak linku" else html.Span()
         ]),
         html.Div(className='text-center', children=[
             html.H4(["V-Score ", html.Span("ℹ️", id="tooltip-vscore", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Wskaźnik wiralności. Wynik powyżej 1.5x oznacza wykrycie viralu!", target="tooltip-vscore", placement="top"),
-            html.H2(f"{v_score:.2f}x", style={'color': '#fe0979' if v_score > 1.5 else '#00f2fe'})
+            html.H2(f"{v_score:.2f}x", style={'color': '#fe0979' if v_score > 1.5 else '#00f2fe', 'fontSize': '3em', 'fontWeight': 'bold'})
         ])
     ]
     
     df_plot = df.iloc[::-1].reset_index(drop=True)
-    if 'url' not in df_plot.columns:
-        df_plot['url'] = "Brak linku"
+    if 'url' not in df_plot.columns: df_plot['url'] = "Brak linku"
+    if 'title' not in df_plot.columns: df_plot['title'] = "Brak tytułu"
 
-    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url"])
+    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
     
     if 'date_label' in df_plot.columns:
         fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
         
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
-    fig.update_traces(hovertemplate="<b>Zaangażowanie:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>")
+    fig.update_traces(hovertemplate="<b>%{customdata[1]}</b><br><br><b>Wynik:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
     stored_data = {
