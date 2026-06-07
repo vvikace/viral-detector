@@ -53,6 +53,15 @@ def get_app_layout():
                 ])
             ])
         ], className="border-info mb-4 shadow", style={'backgroundColor': '#111', 'borderRadius': '15px'}),
+        html.Div(className="text-center mb-4", children=[
+            html.P("Nie masz pomysłu? Sprawdź popularnych twórców:", style={'color': '#aaa', 'fontSize': '0.9em', 'marginBottom': '10px'}),
+            html.Div(className="d-flex justify-content-center gap-2 flex-wrap", children=[
+                dbc.Button("@wersow", id="btn-wersow", outline=True, color="info", size="sm", className="rounded-pill"),
+                dbc.Button("@friz", id="btn-friz", outline=True, color="info", size="sm", className="rounded-pill"),
+                dbc.Button("@hi_hania", id="btn-hania", outline=True, color="info", size="sm", className="rounded-pill"),
+                dbc.Button("@przemek.pro", id="btn-przemek", outline=True, color="info", size="sm", className="rounded-pill"),
+            ])
+        ]),
         
         html.Div(id='error-message', className="text-danger text-center fw-bold mb-3"),
         html.Div(id='success-message', className="text-success text-center fw-bold mb-3"),
@@ -69,20 +78,6 @@ def get_app_layout():
         
         dcc.Download(id="download-dataframe-pdf"),
         dcc.Store(id='store-data'),
-
-        # ekran powitalny
-        html.Div(id="welcome-screen", className="mt-5", children=[
-            
-            # 1. Szybki Start
-            html.Div(className="text-center mb-5", children=[
-            html.P("Nie masz pomysłu? Sprawdź popularnych twórców:", style={'color': '#aaa', 'fontSize': '1.1em'}),
-            html.Div(className="d-flex justify-content-center gap-3 flex-wrap", children=[
-                dbc.Button("@wersow", id="btn-wersow", outline=True, color="info", className="rounded-pill"),
-                dbc.Button("@friz", id="btn-friz", outline=True, color="info", className="rounded-pill"),
-                dbc.Button("@hi_hania", id="btn-hania", outline=True, color="info", className="rounded-pill"),
-                dbc.Button("@przemek.pro", id="btn-przemek", outline=True, color="info", className="rounded-pill"),
-            ])
-        ]),
 
             # 2. Infografiki
             dbc.Row(className="text-center mt-5", children=[
