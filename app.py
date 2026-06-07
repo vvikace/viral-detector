@@ -129,12 +129,11 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
-        # Sortujemy od najstarszego wpisu do najnowszego, aby linia trendu szła poprawnie od lewej do prawej
         df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
         df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
     avg_engagement = df["engagement"].mean()
-    latest_post = df.iloc[-1] # Najnowszy rekord po sortowaniu chronologicznym jest na końcu listy
+    latest_post = df.iloc[-1]
     
     latest_url = latest_post.get("url", "Brak linku")
     latest_title = latest_post.get("title", "Brak tytułu")
@@ -143,7 +142,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     
     # Wizualna plakietka "VIRAL" nad miniaturką
     badge = html.Div(
-        "🔥 VIRAL!",
+        "VIRAL!",
         style={
             'position': 'absolute', 'top': '10px', 'right': '10px',
             'backgroundColor': '#fe0979', 'color': 'white', 'padding': '5px 10px',
@@ -177,7 +176,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         ])
     ]
     
-    # Tworzenie wykresu na czystych, chronologicznych danych
+    # Wykres na czystych, chronologicznych danych
     fig = px.bar(df, x=df.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
                  template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
     
