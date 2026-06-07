@@ -70,7 +70,7 @@ def update_dashboard(n1, n2, target_profile, platform):
             posts_data.append({
                 "date": item.get('data'), 
                 "engagement": item.get('ostatni_post', 0),
-                "url": item.get('url_posta', 'Brak linku')  # Wczytywanie linku z bazy
+                "url": item.get('url_posta', 'Brak linku')
             })
             
         if not posts_data:
@@ -82,7 +82,6 @@ def update_dashboard(n1, n2, target_profile, platform):
     if not posts_data:
         return "", {}, {'display': 'none'}, "Nie udało się pobrać danych.", "", None, {'display': 'none'}
         
-    # Tworzymy DataFrame i poprawiamy format daty
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
@@ -90,6 +89,7 @@ def update_dashboard(n1, n2, target_profile, platform):
         
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[0]
+    latest_url = latest_post.get("url", "Brak linku")
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
     db_message = ""
@@ -104,8 +104,6 @@ def update_dashboard(n1, n2, target_profile, platform):
                 "srednia": int(avg_engagement), 
                 "ostatni_post": int(latest_post["engagement"]), 
                 "v_score": float(v_score)
-                # Tu w app.py nie musimy dodawać url_posta, bo kliknięcie na stronie 
-                # tylko odświeża liczby wizualnie. Pełne wpisy (z URL) robi bot w tle.
             }
             supabase.table("historia_analiz").insert(data_to_save).execute()
             db_message = "Zapisano w bazie!"
@@ -121,7 +119,8 @@ def update_dashboard(n1, n2, target_profile, platform):
         html.Div(className='text-center', children=[
             html.H4(["Ostatni post ", html.Span("ℹ️", id="tooltip-latest", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Liczba interakcji pod najnowszym opublikowanym materiałem.", target="tooltip-latest", placement="top"),
-            html.H2(f"{int(latest_post['engagement']):,}")
+            html.H2(f"{int(latest_post['engagement']):,}"),
+            html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="text-info", style={'textDecoration': 'none', 'fontWeight': 'bold'}) if latest_url != "Brak linku" else html.Span()
         ]),
         html.Div(className='text-center', children=[
             html.H4(["V-Score ", html.Span("ℹ️", id="tooltip-vscore", style={'cursor': 'help', 'fontSize': '0.8em'})]),
@@ -130,20 +129,16 @@ def update_dashboard(n1, n2, target_profile, platform):
         ])
     ]
     
-    # Odwracamy wykres i upewniamy się, że kolumna z linkiem istnieje
     df_plot = df.iloc[::-1].reset_index(drop=True)
     if 'url' not in df_plot.columns:
         df_plot['url'] = "Brak linku"
 
-    # Wykres z wstrzykniętymi custom_data (link)
     fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url"])
     
     if 'date_label' in df_plot.columns:
         fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
         
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
-    
-    # Formatowanie dymku z linkiem
     fig.update_traces(hovertemplate="<b>Zaangażowanie:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
@@ -152,7 +147,8 @@ def update_dashboard(n1, n2, target_profile, platform):
         "platform": platform,
         "avg": int(avg_engagement),
         "latest": int(latest_post["engagement"]),
-        "vscore": v_score
+        "vscore": v_score,
+        "latest_url": latest_url  
     }
     
     return metrics_html, fig, {'display': 'block'}, "", db_message, stored_data, {'display': 'inline-block'}
@@ -189,6 +185,14 @@ def generate_pdf(n_clicks, stored_data):
     pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (10 postow): {stored_data['avg']}"), ln=True)
     pdf.cell(200, 10, txt=clean(f"Ostatnie zaangazowanie: {stored_data['latest']}"), ln=True)
     pdf.cell(200, 10, txt=clean(f"Wskaznik V-Score: {stored_data['vscore']:.2f}x"), ln=True)
+    
+    url = stored_data.get('latest_url', '')
+    if url and url != 'Brak linku':
+        pdf.set_font("Arial", 'U', 12)  
+        pdf.set_text_color(0, 150, 255) 
+        pdf.cell(200, 10, txt=clean("-> Kliknij tutaj, aby otworzyc analizowany post <-"), ln=True, link=url)
+        pdf.set_text_color(0, 0, 0)     
+        pdf.set_font("Arial", size=12)
     
     pdf.ln(5)
     pdf.set_font("Arial", 'B', 12)
