@@ -65,6 +65,19 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             posts_data, error_msg = get_tiktok_posts(target_profile)
         else:
             posts_data, error_msg = get_youtube_posts(target_profile)
+        if posts_data and history_mode == 'long':
+            supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
+            historia = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(100).execute()
+            
+            for item in historia.data:
+                if not any(d['url'] == item.get('url_posta') for d in posts_data):
+                    posts_data.append({
+                        "date": item.get('data'), 
+                        "engagement": item.get('ostatni_post', 0),
+                        "url": item.get('url_posta', 'Brak linku'),
+                        "title": item.get('tytul', 'Brak tytułu'),
+                        "thumbnail": item.get('miniaturka', '')
+                    })
     else:
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
         query = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True)
