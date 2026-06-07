@@ -31,7 +31,26 @@ def get_app_layout():
                     dbc.Col([
                         html.Button('ODŚWIEŻ', id='btn-force-refresh', n_clicks=0, className="btn btn-warning w-100 fw-bold mt-4"),
                     ], md=3)
-                ], className="g-3 align-items-center")
+                ], className="g-3 align-items-center"),
+                
+                dbc.Row([
+                    dbc.Col([
+                        html.Div([
+                            dbc.RadioItems(
+                                id="history-toggle",
+                                className="btn-group",
+                                inputClassName="btn-check",
+                                labelClassName="btn btn-outline-info fw-bold",
+                                labelCheckedClassName="active",
+                                options=[
+                                    {"label": "Ostatnie 10 pomiarów", "value": "short"},
+                                    {"label": "Cała historia (Trend)", "value": "long"},
+                                ],
+                                value="short",
+                            )
+                        ], className="text-center mt-4")
+                    ])
+                ])
             ])
         ], className="border-info mb-4 shadow", style={'backgroundColor': '#111', 'borderRadius': '15px'}),
         
