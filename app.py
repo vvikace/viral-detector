@@ -69,7 +69,8 @@ def update_dashboard(n1, n2, target_profile, platform):
         for item in response.data:
             posts_data.append({
                 "date": item.get('data'), 
-                "engagement": item.get('ostatni_post', 0) 
+                "engagement": item.get('ostatni_post', 0),
+                "url": item.get('url_posta', 'Brak linku')  # Wczytywanie linku z bazy
             })
             
         if not posts_data:
@@ -103,6 +104,8 @@ def update_dashboard(n1, n2, target_profile, platform):
                 "srednia": int(avg_engagement), 
                 "ostatni_post": int(latest_post["engagement"]), 
                 "v_score": float(v_score)
+                # Tu w app.py nie musimy dodawać url_posta, bo kliknięcie na stronie 
+                # tylko odświeża liczby wizualnie. Pełne wpisy (z URL) robi bot w tle.
             }
             supabase.table("historia_analiz").insert(data_to_save).execute()
             db_message = "Zapisano w bazie!"
@@ -127,14 +130,21 @@ def update_dashboard(n1, n2, target_profile, platform):
         ])
     ]
     
+    # Odwracamy wykres i upewniamy się, że kolumna z linkiem istnieje
     df_plot = df.iloc[::-1].reset_index(drop=True)
+    if 'url' not in df_plot.columns:
+        df_plot['url'] = "Brak linku"
 
-    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"])
+    # Wykres z wstrzykniętymi custom_data (link)
+    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Zaangażowanie: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url"])
     
     if 'date_label' in df_plot.columns:
         fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
         
     fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
+    
+    # Formatowanie dymku z linkiem
+    fig.update_traces(hovertemplate="<b>Zaangażowanie:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>")
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     
     stored_data = {
