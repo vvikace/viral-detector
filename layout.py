@@ -80,6 +80,7 @@ def get_app_layout():
         dcc.Store(id='store-data'),
 
             # 2. Infografiki
+        html.Div(id="welcome-screen", className="mt-5", children=[
             dbc.Row(className="text-center mt-5", children=[
                 dbc.Col(md=4, children=[
                     html.Div("📡", style={'fontSize': '3.5rem', 'marginBottom': '15px'}),
