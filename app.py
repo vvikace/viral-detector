@@ -47,7 +47,7 @@ app.layout = get_app_layout()
 def set_quick_profile(n1, n2, n3, n4):
     trigger = ctx.triggered_id
     if trigger == 'btn-wersow': return 'wersow'
-    if trigger == 'btn-friz': return 'friz'
+    if trigger == 'btn-friz': return 'tojafriz'
     if trigger == 'btn-hania': return 'hi_hania'
     if trigger == 'btn-przemek': return 'przemek.pro'
     return dash.no_update
