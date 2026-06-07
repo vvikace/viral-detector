@@ -103,5 +103,13 @@ def get_app_layout():
                 ])
             ])
         ])
+        html.Footer([
+            html.Hr(style={'borderColor': '#fe0979', 'opacity': '0.3'}),
+            html.P([
+                "Stworzone przez ", 
+                html.Span("Wiktorię Cedro", style={'color': '#00f2fe', 'fontWeight': 'bold', 'textShadow': '0 0 5px #00f2fe'}),
+                " | Viral Detector 2026"
+            ], className="text-center text-muted mt-3 mb-4", style={'fontSize': '0.9em'})
+        ])
         
     ], fluid=True, style={'maxWidth': '1100px'})
