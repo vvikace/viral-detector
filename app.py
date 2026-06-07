@@ -47,11 +47,12 @@ app.layout = get_app_layout()
      Output('store-data', 'data'),
      Output('btn-download-pdf', 'style')],
     [Input('analyze-button', 'n_clicks'),
-     Input('btn-force-refresh', 'n_clicks')],
+     Input('btn-force-refresh', 'n_clicks'),
+     Input('history-toggle', 'value')],
     [State('profile-input', 'value'),
      State('platform-select', 'value')]
 )
-def update_dashboard(n1, n2, target_profile, platform):
+def update_dashboard(n1, n2, history_mode, target_profile, platform):
     if not target_profile or (n1 == 0 and n2 == 0):
         return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}
     
@@ -66,7 +67,14 @@ def update_dashboard(n1, n2, target_profile, platform):
             posts_data, error_msg = get_youtube_posts(target_profile)
     else:
         supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
-        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(10).execute()
+        query = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True)
+        
+        if history_mode == "short":
+            query = query.limit(10)
+        else:
+            query = query.limit(100)
+            
+        response = query.execute()
         
         posts_data = []
         for item in response.data:
@@ -83,10 +91,7 @@ def update_dashboard(n1, n2, target_profile, platform):
     
     if error_msg:
         return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
-        
-    if not posts_data:
-        return "", {}, {'display': 'none'}, "Nie udało się pobrać danych.", "", None, {'display': 'none'}
-        
+    
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
@@ -148,14 +153,19 @@ def update_dashboard(n1, n2, target_profile, platform):
     if 'url' not in df_plot.columns: df_plot['url'] = "Brak linku"
     if 'title' not in df_plot.columns: df_plot['title'] = "Brak tytułu"
 
-    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})", template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
+    fig = px.bar(df_plot, x=df_plot.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
+                 template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
     
     if 'date_label' in df_plot.columns:
         fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
-        
-    fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
-    fig.update_traces(hovertemplate="<b>%{customdata[1]}</b><br><br><b>Wynik:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>")
-    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+    if history_mode == 'long' and len(df_plot) > 5:
+        df_plot['trend'] = df_plot['engagement'].rolling(window=5, min_periods=1).mean()
+        fig.add_scatter(x=df_plot.index, y=df_plot['trend'], mode='lines', name='Linia trendu',
+                        line=dict(color='#fe0979', width=4))
+    else:
+        fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
+    fig.update_traces(hovertemplate="<b>%{customdata[1]}</b><br><br><b>Wynik:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>", selector=dict(type='bar'))
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
     
     stored_data = {
         "profile": target_profile,
