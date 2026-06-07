@@ -62,19 +62,16 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     error_msg = ""
     db_message = ""
     
-    # ŚCIEŻKA A: KLIKNIĘTO "ODŚWIEŻ" (Pobieranie 10 najnowszych z sieci + ewentualne 90 z bazy)
+    # 1. RĘCZNE ODŚWIEŻENIE: Wymusza zapis najnowszego stanu do bazy danych
     if trigger_id == 'btn-force-refresh':
         if platform.lower() == 'tiktok':
-            posts_data, error_msg = get_tiktok_posts(target_profile)
+            fresh_data, refresh_error = get_tiktok_posts(target_profile)
         else:
-            posts_data, error_msg = get_youtube_posts(target_profile)
+            fresh_data, refresh_error = get_youtube_posts(target_profile)
             
-        if error_msg:
-            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
-            
-        if posts_data:
+        if fresh_data and not refresh_error:
             try:
-                df_scraped = pd.DataFrame(posts_data)
+                df_scraped = pd.DataFrame(fresh_data)
                 avg_scraped = df_scraped["engagement"].mean()
                 latest_scraped = df_scraped.iloc[0]
                 v_score_scraped = latest_scraped["engagement"] / avg_scraped if avg_scraped > 0 else 0
@@ -94,24 +91,23 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             except Exception as e:
                 db_message = f"(Błąd zapisu nowej historii: {e})"
 
-        # Jeśli tryb to 'long', dociągamy DOKŁADNIE 90 archiwalnych wpisów z bazy, by dopełnić do 100
-        if posts_data and history_mode == 'long':
-            historia = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(90).execute()
-            for item in historia.data:
-                # Blokada przed duplikowaniem nowo pobranego wpisu
-                if not any(d.get('url') == item.get('url_posta') for d in posts_data):
-                    posts_data.append({
-                        "date": item.get('data'), 
-                        "engagement": item.get('ostatni_post', 0),
-                        "url": item.get('url_posta', 'Brak linku'),
-                        "title": item.get('tytul', 'Brak tytułu'),
-                        "thumbnail": item.get('miniaturka', '')
-                    })
-                    
-    # ŚCIEŻKA B: ZWYKŁA ANALIZA LUB ZMIANA PRZEŁĄCZNIKA (Czytamy czyste dane z bazy: 10 lub 100)
+    # ----------------------------------------------------------------------------------
+    # BROŃ 1: Ostatnie 10 pomiarów (NA ŻYWO Z SIECI - porównanie 10 najnowszych filmów)
+    # ----------------------------------------------------------------------------------
+    if history_mode == "short":
+        if platform.lower() == 'tiktok':
+            posts_data, error_msg = get_tiktok_posts(target_profile)
+        else:
+            posts_data, error_msg = get_youtube_posts(target_profile)
+            
+        if error_msg:
+            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
+            
+    # ----------------------------------------------------------------------------------
+    # BROŃ 2: Cała historia (Z BAZY - śledzenie godzinowe przyrostu ze schodami)
+    # ----------------------------------------------------------------------------------
     else:
-        limit_val = 10 if history_mode == "short" else 100
-        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(limit_val).execute()
+        response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(100).execute()
         
         for item in response.data:
             posts_data.append({
@@ -124,13 +120,14 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             
         if not posts_data:
             return "", {}, {'display': 'none'}, f"Brak danych w bazie dla @{target_profile}. Kliknij Odśwież.", "", None, {'display': 'none'}
-        
-    # KROK wspólny dla obu ścieżek: Sortowanie chronologiczne i przygotowanie tabeli
+
+    # ----------------------------------------------------------------------------------
+    # WSPÓLNA OBRÓBKA (Dla historii z bazy brak drop_duplicates, by zachować wzrost)
+    # ----------------------------------------------------------------------------------
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
         df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
-        df = df.drop_duplicates(subset=['url'], keep='last').reset_index(drop=True)
         df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
     avg_engagement = df["engagement"].mean()
@@ -141,9 +138,8 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     latest_thumb = latest_post.get("thumbnail", "")
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
-    # Wizualna plakietka "VIRAL" nad miniaturką
     badge = html.Div(
-        "VIRAL!",
+        "🔥 VIRAL!",
         style={
             'position': 'absolute', 'top': '10px', 'right': '10px',
             'backgroundColor': '#fe0979', 'color': 'white', 'padding': '5px 10px',
@@ -154,7 +150,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     
     metrics_html = [
         html.Div(className='metric-card text-center', children=[
-            html.H4(["Średnia z 10 postów ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
+            html.H4(["Średnia " + ("z 10 postów " if history_mode == 'short' else "historyczna "), html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Średnie zaangażowanie z widocznych publikacji.", target="tooltip-avg", placement="top"),
             html.H2(f"{int(avg_engagement):,}", className="mt-4")
         ]),
@@ -177,7 +173,6 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         ])
     ]
     
-    # Wykres na czystych, chronologicznych danych
     fig = px.bar(df, x=df.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
                  template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
     
@@ -233,7 +228,7 @@ def generate_pdf(n_clicks, stored_data):
     pdf.cell(200, 10, txt=clean(f"Profil sledzony: @{stored_data['profile']}"), ln=True)
     pdf.ln(5)
     
-    pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (10 postow): {stored_data['avg']}"), ln=True)
+    pdf.cell(200, 10, txt=clean(f"Srednie zaangazowanie (z wykresu): {stored_data['avg']}"), ln=True)
     pdf.cell(200, 10, txt=clean(f"Ostatnie zaangazowanie: {stored_data['latest']}"), ln=True)
     pdf.cell(200, 10, txt=clean(f"Wskaznik V-Score: {stored_data['vscore']:.2f}x"), ln=True)
     
