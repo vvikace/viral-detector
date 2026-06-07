@@ -68,6 +68,40 @@ def get_app_layout():
         ),
         
         dcc.Download(id="download-dataframe-pdf"),
-        dcc.Store(id='store-data')
+        dcc.Store(id='store-data'),
+        
+        # EKRAN POWITALNY
+        html.Div(id="welcome-screen", className="mt-5", children=[
+            
+            # 1. Szybki Start
+            html.Div(className="text-center mb-5", children=[
+                html.P("Nie masz pomysłu? Sprawdź popularnych twórców:", style={'color': '#aaa', 'fontSize': '1.1em'}),
+                html.Div(className="d-flex justify-content-center gap-3 flex-wrap", children=[
+                    dbc.Button("@wersow", id="btn-wersow", outline=True, color="info", className="rounded-pill"),
+                    dbc.Button("@friz", id="btn-friz", outline=True, color="info", className="rounded-pill"),
+                    dbc.Button("@hi_hania", id="btn-hania", outline=True, color="info", className="rounded-pill"),
+                    dbc.Button("@przemek.pro", id="btn-przemek", outline=True, color="info", className="rounded-pill"),
+                ])
+            ]),
+
+            # 2. Infografiki
+            dbc.Row(className="text-center mt-5", children=[
+                dbc.Col(md=4, children=[
+                    html.Div("📡", style={'fontSize': '3.5rem', 'marginBottom': '15px'}),
+                    html.H5("Skanowanie Sieci", style={'color': '#00f2fe', 'fontWeight': 'bold'}),
+                    html.P("Pobieraj najświeższe dane o zasięgach prosto z TikToka i YouTube w czasie rzeczywistym!", style={'color': '#888', 'fontSize': '0.9em'})
+                ]),
+                dbc.Col(md=4, children=[
+                    html.Div("🗄️", style={'fontSize': '3.5rem', 'marginBottom': '15px'}),
+                    html.H5("Historia i Trendy", style={'color': '#fe0979', 'fontWeight': 'bold'}),
+                    html.P("Narzędzie w tle buduje bazę danych dla analizowanych profili, pozwalając wyłapać długoterminowe wzorce.", style={'color': '#888', 'fontSize': '0.9em'})
+                ]),
+                dbc.Col(md=4, children=[
+                    html.Div("🔥", style={'fontSize': '3.5rem', 'marginBottom': '15px'}),
+                    html.H5("Wykrywanie Anomalii", style={'color': '#00f2fe', 'fontWeight': 'bold'}),
+                    html.P("Autorski wskaźnik V-Score automatycznie identyfikuje materiały, które zyskują status viralu.", style={'color': '#888', 'fontSize': '0.9em'})
+                ])
+            ])
+        ])
         
     ], fluid=True, style={'maxWidth': '1100px'})
