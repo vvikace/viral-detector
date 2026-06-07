@@ -130,6 +130,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
         df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
+        df = df.drop_duplicates(subset=['url'], keep='last').reset_index(drop=True)
         df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
     avg_engagement = df["engagement"].mean()
