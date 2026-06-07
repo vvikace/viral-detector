@@ -205,7 +205,7 @@ def generate_pdf(n_clicks, stored_data):
     if url and url != 'Brak linku':
         pdf.set_font("Arial", 'U', 12)  
         pdf.set_text_color(0, 150, 255) 
-        pdf.cell(200, 10, txt=clean("-> Kliknij tutaj, aby otworzyc analizowany post <-"), ln=True, link=url)
+        pdf.cell(200, 10, txt=clean("-> Kliknij tutaj, aby otworzyc najnowszy post <-"), ln=True, link=url)
         pdf.set_text_color(0, 0, 0)     
         pdf.set_font("Arial", size=12)
     
