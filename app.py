@@ -123,22 +123,24 @@ def update_dashboard(n1, n2, target_profile, platform):
         db_message = f"(Błąd zapisu DB: {e})"
         
     metrics_html = [
-        html.Div(className='text-center', children=[
+        html.Div(className='metric-card text-center', children=[
             html.H4(["Średnia 10 postów ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Średnie zaangażowanie z ostatnich 10 publikacji.", target="tooltip-avg", placement="top"),
-            html.H2(f"{int(avg_engagement):,}")
+            html.H2(f"{int(avg_engagement):,}", className="mt-4")
         ]),
-        html.Div(className='text-center', children=[
+        
+        html.Div(className='metric-card text-center', children=[
             html.H4("Najnowszy Post", className="mb-3"),
-            html.Img(src=latest_thumb, style={'maxHeight': '150px', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.3)'}) if latest_thumb else html.Div(),
-            html.P(latest_title[:50] + "..." if len(latest_title) > 50 else latest_title, style={'fontSize': '0.9em', 'fontStyle': 'italic', 'color': '#ccc'}),
-            html.H3(f"Zaangażowanie: {int(latest_post['engagement']):,}"),
-            html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="btn btn-outline-info btn-sm mt-2") if latest_url != "Brak linku" else html.Span()
+            html.Img(src=latest_thumb, style={'maxHeight': '140px', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.2)'}) if latest_thumb else html.Div(),
+            html.P(latest_title[:45] + "..." if len(latest_title) > 45 else latest_title, style={'fontSize': '0.85em', 'fontStyle': 'italic', 'color': '#aaa'}),
+            html.H3(f"{int(latest_post['engagement']):,}"),
+            html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="btn btn-outline-info btn-sm mt-2 w-100 fw-bold") if latest_url != "Brak linku" else html.Span()
         ]),
-        html.Div(className='text-center', children=[
+        
+        html.Div(className='metric-card text-center', children=[
             html.H4(["V-Score ", html.Span("ℹ️", id="tooltip-vscore", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Wskaźnik wiralności. Wynik powyżej 1.5x oznacza wykrycie viralu!", target="tooltip-vscore", placement="top"),
-            html.H2(f"{v_score:.2f}x", style={'color': '#fe0979' if v_score > 1.5 else '#00f2fe', 'fontSize': '3em', 'fontWeight': 'bold'})
+            html.H2(f"{v_score:.2f}x", className="mt-4", style={'color': '#fe0979' if v_score > 1.5 else '#00f2fe', 'fontSize': '3.5em', 'fontWeight': '900'})
         ])
     ]
     
