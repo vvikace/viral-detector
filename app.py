@@ -159,7 +159,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     if 'date_label' in df_plot.columns:
         fig.update_xaxes(tickvals=df_plot.index, ticktext=df_plot['date_label'], title="Data")
     if history_mode == 'long' and len(df_plot) > 5:
-        df_plot['trend'] = df_plot['engagement'].rolling(window=5, min_periods=1).mean()
+        df_plot['trend'] = df_plot['engagement'].rolling(window=3, min_periods=1).mean()
         fig.add_scatter(x=df_plot.index, y=df_plot['trend'], mode='lines', name='Linia trendu',
                         line=dict(color='#fe0979', width=4))
     else:
