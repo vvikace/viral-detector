@@ -136,7 +136,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         
         html.Div(className='metric-card text-center', children=[
             html.H4("Najnowszy Post", className="mb-3"),
-            html.Img(src=latest_thumb, style={'maxHeight': '140px', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.2)'}) if latest_thumb else html.Div(),
+            html.Img(src=latest_thumb, style={'height': '140px', 'width': '100%', 'objectFit': 'cover', 'borderRadius': '10px', 'marginBottom': '10px', 'boxShadow': '0 4px 8px rgba(0,242,254,0.2)'}) if latest_thumb else html.Div(),
             html.P(latest_title[:45] + "..." if len(latest_title) > 45 else latest_title, style={'fontSize': '0.85em', 'fontStyle': 'italic', 'color': '#aaa'}),
             html.H3(f"{int(latest_post['engagement']):,}"),
             html.A("🔗 Otwórz post", href=latest_url, target="_blank", className="btn btn-outline-info btn-sm mt-2 w-100 fw-bold") if latest_url != "Brak linku" else html.Span()
