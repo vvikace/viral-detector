@@ -102,7 +102,7 @@ def get_app_layout():
                     html.P("Autorski wskaźnik V-Score automatycznie identyfikuje materiały, które zyskują status viralu.", style={'color': '#888', 'fontSize': '0.9em'})
                 ])
             ])
-        ])
+        ]),
         html.Footer([
             html.Hr(style={'borderColor': '#fe0979', 'opacity': '0.3'}),
             html.P([
