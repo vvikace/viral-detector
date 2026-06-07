@@ -154,7 +154,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     
     metrics_html = [
         html.Div(className='metric-card text-center', children=[
-            html.H4(["Średnia z okresu ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
+            html.H4(["Średnia z 10 postów ", html.Span("ℹ️", id="tooltip-avg", style={'cursor': 'help', 'fontSize': '0.8em'})]),
             dbc.Tooltip("Średnie zaangażowanie z widocznych publikacji.", target="tooltip-avg", placement="top"),
             html.H2(f"{int(avg_engagement):,}", className="mt-4")
         ]),
