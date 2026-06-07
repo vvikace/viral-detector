@@ -22,10 +22,8 @@ def bot_loop():
             print(f"Bot: Błąd w trakcie aktualizacji: {e}")
         time.sleep(3600) 
 
-# Bota w tle przy starcie aplikacji
 thread = threading.Thread(target=bot_loop, daemon=True)
 thread.start()
-# ----------------------------
 
 from layout import get_app_layout
 from api_scraper import get_tiktok_posts, get_youtube_posts
@@ -39,13 +37,31 @@ app.title = "Viral Detector"
 app.layout = get_app_layout()
 
 @app.callback(
+    Output('profile-input', 'value'),
+    [Input('btn-wersow', 'n_clicks'),
+     Input('btn-friz', 'n_clicks'),
+     Input('btn-hania', 'n_clicks'),
+     Input('btn-przemek', 'n_clicks')],
+    prevent_initial_call=True
+)
+def set_quick_profile(n1, n2, n3, n4):
+    trigger = ctx.triggered_id
+    if trigger == 'btn-wersow': return 'wersow'
+    if trigger == 'btn-friz': return 'friz'
+    if trigger == 'btn-hania': return 'hi_hania'
+    if trigger == 'btn-przemek': return 'przemek.pro'
+    return dash.no_update
+
+
+@app.callback(
     [Output('metrics-output', 'children'),
      Output('engagement-graph', 'figure'),
      Output('engagement-graph', 'style'),
      Output('error-message', 'children'),
      Output('success-message', 'children'),
      Output('store-data', 'data'),
-     Output('btn-download-pdf', 'style')],
+     Output('btn-download-pdf', 'style'),
+     Output('welcome-screen', 'style')],
     [Input('analyze-button', 'n_clicks'),
      Input('btn-force-refresh', 'n_clicks'),
      Input('history-toggle', 'value')],
@@ -54,15 +70,14 @@ app.layout = get_app_layout()
 )
 def update_dashboard(n1, n2, history_mode, target_profile, platform):
     if not target_profile or (n1 == 0 and n2 == 0 and ctx.triggered_id is None):
-        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}
+        return "", {}, {'display': 'none'}, "", "", None, {'display': 'none'}, {'display': 'block'}
     
     trigger_id = ctx.triggered_id
     supabase = create_client(os.environ.get("SUPABASE_URL"), os.environ.get("SUPABASE_KEY"))
     posts_data = []
     error_msg = ""
     db_message = ""
-    
-    # 1. RĘCZNE ODŚWIEŻENIE: Wymusza zapis najnowszego stanu do bazy danych
+
     if trigger_id == 'btn-force-refresh':
         if platform.lower() == 'tiktok':
             fresh_data, refresh_error = get_tiktok_posts(target_profile)
@@ -91,9 +106,6 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             except Exception as e:
                 db_message = f"(Błąd zapisu nowej historii: {e})"
 
-    # ----------------------------------------------------------------------------------
-    # BROŃ 1: Ostatnie 10 pomiarów (NA ŻYWO Z SIECI - porównanie 10 najnowszych filmów)
-    # ----------------------------------------------------------------------------------
     if history_mode == "short":
         if platform.lower() == 'tiktok':
             posts_data, error_msg = get_tiktok_posts(target_profile)
@@ -101,11 +113,8 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             posts_data, error_msg = get_youtube_posts(target_profile)
             
         if error_msg:
-            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}
+            return "", {}, {'display': 'none'}, error_msg, "", None, {'display': 'none'}, {'display': 'block'}
             
-    # ----------------------------------------------------------------------------------
-    # BROŃ 2: Cała historia (Z BAZY - śledzenie godzinowe przyrostu ze schodami)
-    # ----------------------------------------------------------------------------------
     else:
         response = supabase.table("historia_analiz").select("*").eq("profil", target_profile).eq("platforma", platform).order("data", desc=True).limit(100).execute()
         
@@ -119,11 +128,8 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
             })
             
         if not posts_data:
-            return "", {}, {'display': 'none'}, f"Brak danych w bazie dla @{target_profile}. Kliknij Odśwież.", "", None, {'display': 'none'}
+            return "", {}, {'display': 'none'}, f"Brak danych w bazie dla @{target_profile}. Kliknij Odśwież.", "", None, {'display': 'none'}, {'display': 'block'}
 
-    # ----------------------------------------------------------------------------------
-    # WSPÓLNA OBRÓBKA (Dla historii z bazy brak drop_duplicates, by zachować wzrost)
-    # ----------------------------------------------------------------------------------
     df = pd.DataFrame(posts_data)
     if 'date' in df.columns:
         df['date'] = pd.to_datetime(df['date'], errors='coerce')
@@ -197,7 +203,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         "latest_url": latest_url  
     }
     
-    return metrics_html, fig, {'display': 'block'}, "", db_message, stored_data, {'display': 'inline-block'}
+    return metrics_html, fig, {'display': 'block'}, "", db_message, stored_data, {'display': 'inline-block'}, {'display': 'none'}
 
 @app.callback(
     Output("download-dataframe-pdf", "data"),
@@ -252,7 +258,7 @@ def generate_pdf(n_clicks, stored_data):
     pdf.set_text_color(0, 0, 0)
     pdf.ln(10)
     pdf.set_font("Arial", 'I', size=8)
-    pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector"), ln=True)
+    pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
     
     return dcc.send_bytes(pdf.output(dest='S').encode('latin-1', 'replace'), f"raport_{stored_data['profile']}.pdf")
 
