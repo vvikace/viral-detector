@@ -25,7 +25,7 @@ h1 {
     transform: scale(1.02);
 }
 
-/* --- Efekt Hover dla kafelków z wynikami --- */
+/* --- Efekt Hover dla kafelków --- */
 .metric-card {
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     padding: 25px;
@@ -43,4 +43,10 @@ h1 {
     transform: translateY(-8px);
     box-shadow: 0 15px 30px rgba(0, 242, 254, 0.15);
     border-color: #00f2fe;
+}
+
+footer a:hover {
+    color: #fe0979 !important;
+    text-shadow: 0 0 10px #fe0979 !important;
+    cursor: pointer;
 }
