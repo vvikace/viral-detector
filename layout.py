@@ -69,20 +69,20 @@ def get_app_layout():
         
         dcc.Download(id="download-dataframe-pdf"),
         dcc.Store(id='store-data'),
-        
-        # EKRAN POWITALNY
+
+        # ekran powitalny
         html.Div(id="welcome-screen", className="mt-5", children=[
             
             # 1. Szybki Start
             html.Div(className="text-center mb-5", children=[
-                html.P("Nie masz pomysłu? Sprawdź popularnych twórców:", style={'color': '#aaa', 'fontSize': '1.1em'}),
-                html.Div(className="d-flex justify-content-center gap-3 flex-wrap", children=[
-                    dbc.Button("@wersow", id="btn-wersow", outline=True, color="info", className="rounded-pill"),
-                    dbc.Button("@friz", id="btn-friz", outline=True, color="info", className="rounded-pill"),
-                    dbc.Button("@hi_hania", id="btn-hania", outline=True, color="info", className="rounded-pill"),
-                    dbc.Button("@przemek.pro", id="btn-przemek", outline=True, color="info", className="rounded-pill"),
-                ])
-            ]),
+            html.P("Nie masz pomysłu? Sprawdź popularnych twórców:", style={'color': '#aaa', 'fontSize': '1.1em'}),
+            html.Div(className="d-flex justify-content-center gap-3 flex-wrap", children=[
+                dbc.Button("@wersow", id="btn-wersow", outline=True, color="info", className="rounded-pill"),
+                dbc.Button("@friz", id="btn-friz", outline=True, color="info", className="rounded-pill"),
+                dbc.Button("@hi_hania", id="btn-hania", outline=True, color="info", className="rounded-pill"),
+                dbc.Button("@przemek.pro", id="btn-przemek", outline=True, color="info", className="rounded-pill"),
+            ])
+        ]),
 
             # 2. Infografiki
             dbc.Row(className="text-center mt-5", children=[
