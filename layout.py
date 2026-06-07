@@ -103,7 +103,7 @@ def get_app_layout():
             html.Hr(style={'borderColor': '#fe0979', 'opacity': '0.3'}),
             html.P([
                 "Stworzone przez: ", 
-                html.A("Wiktoria Cedro", href="https://www.instagram.com/vvikace", target="_blank", style={'color': '#00f2fe', 'fontWeight': 'bold', 'textShadow': '0 0 5px #00f2fe'}),
+                html.A("Wiktoria Cedro", href="https://www.instagram.com/vvikace", target="_blank", style={'color': '#00f2fe', 'fontWeight': 'bold', 'textShadow': '0 0 5px #00f2fe', 'textDecoration': 'none'}),
                 " | Viral Detector 2026"
             ], className="text-center text-muted mt-3 mb-4", style={'fontSize': '0.9em'})
         ])
