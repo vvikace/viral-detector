@@ -139,7 +139,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     v_score = latest_post["engagement"] / avg_engagement if avg_engagement > 0 else 0
     
     badge = html.Div(
-        "🔥 VIRAL!",
+        "VIRAL!",
         style={
             'position': 'absolute', 'top': '10px', 'right': '10px',
             'backgroundColor': '#fe0979', 'color': 'white', 'padding': '5px 10px',
