@@ -261,6 +261,17 @@ def generate_pdf(n_clicks, stored_data):
     pdf.cell(200, 10, txt=clean("Wygenerowano automatycznie przez Viral Detector by Wiktoria Cedro"), ln=True)
     
     return dcc.send_bytes(pdf.output(dest='S').encode('latin-1', 'replace'), f"raport_{stored_data['profile']}.pdf")
-
+    
+from dash import ClientsideFunction
+app.clientside_callback(
+    """
+    function(profile) {
+        document.title = profile ? "Viral Detector | @" + profile : "Viral Detector";
+        return "";
+    }
+    """,
+    Output('store-data', 'id'),
+    Input('profile-input', 'value')
+)
 if __name__ == '__main__':
     app.run_server(debug=True)
