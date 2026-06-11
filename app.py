@@ -200,7 +200,7 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
         
     if 'date_label' in df.columns:
-        fig.update_xaxes(tickvals=df_labels.index, ticktext=df_labels['date_label'], title="Data (co 10-ty pomiar)")
+        fig.update_xaxes(tickvals=df_labels.index, ticktext=df_labels['date_label'], title="Data")
     
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
     
