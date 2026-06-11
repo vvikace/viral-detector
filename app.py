@@ -183,6 +183,15 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     
     fig = px.bar(df, x=df.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
                  template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
+    fig.update_traces(
+        hovertemplate=(
+            "<b>%{customdata[1]}</b><br><br>" +  
+            "<b>Wynik:</b> %{y}<br>" +            
+            "<b>Link:</b> %{customdata[0]}" +      
+            "<extra></extra>"                      
+        ),
+        selector=dict(type='bar')
+    )
     
     if history_mode == 'long' and len(df) > 5:
         df['trend'] = df['engagement'].rolling(window=5, min_periods=1).mean()
