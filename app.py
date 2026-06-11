@@ -136,6 +136,8 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
         df = df.sort_values(by='date', ascending=True).reset_index(drop=True)
         df['date_label'] = df['date'].dt.strftime('%m-%d %H:%M').str.replace(' 00:00', '')
         
+    df_labels = df.iloc[::10].copy()
+    
     avg_engagement = df["engagement"].mean()
     latest_post = df.iloc[-1]
     
@@ -182,16 +184,15 @@ def update_dashboard(n1, n2, history_mode, target_profile, platform):
     fig = px.bar(df, x=df.index, y="engagement", title=f"Historia dla: @{target_profile} ({platform})",
                  template="plotly_dark", color_discrete_sequence=["#00f2fe"], custom_data=["url", "title"])
     
-    if 'date_label' in df.columns:
-        fig.update_xaxes(tickvals=df.index, ticktext=df['date_label'], title="Data")
-        
     if history_mode == 'long' and len(df) > 5:
         df['trend'] = df['engagement'].rolling(window=5, min_periods=1).mean()
         fig.add_scatter(x=df.index, y=df['trend'], mode='lines', name='Linia trendu', line=dict(color='#fe0979', width=4))
     else:
         fig.add_hline(y=avg_engagement, line_dash="dash", line_color="#fe0979", annotation_text="Średnia")
         
-    fig.update_traces(hovertemplate="<b>%{customdata[1]}</b><br><br><b>Wynik:</b> %{y}<br><b>Link:</b> %{customdata[0]}<extra></extra>", selector=dict(type='bar'))
+    if 'date_label' in df.columns:
+        fig.update_xaxes(tickvals=df_labels.index, ticktext=df_labels['date_label'], title="Data (co 10-ty pomiar)")
+    
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
     
     stored_data = {
